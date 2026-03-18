@@ -17,6 +17,7 @@ interface DragonCallbacks {
 export class DragonActor {
   readonly container = new Container();
   private readonly body = new Graphics();
+  private readonly rimLight = new Graphics();
   private readonly chestGlow = new Graphics();
   private readonly head = new Graphics();
   private readonly eyeLeft = new Graphics();
@@ -28,6 +29,8 @@ export class DragonActor {
   private callbacks: DragonCallbacks;
   private reducedMotion: boolean;
   private breathTween: gsap.core.Tween | null = null;
+  private chestGlowTween: gsap.core.Tween | null = null;
+  private rimTween: gsap.core.Tween | null = null;
   private blinkTimer = 0;
   private smokeTimer = 0;
   private postureTimer = 0;
@@ -65,8 +68,12 @@ export class DragonActor {
     this.reducedMotion = value;
     if (value) {
       this.breathTween?.pause();
+      this.chestGlowTween?.pause();
+      this.rimTween?.pause();
     } else {
       this.breathTween?.resume();
+      this.chestGlowTween?.resume();
+      this.rimTween?.resume();
     }
   }
 
@@ -110,6 +117,14 @@ export class DragonActor {
     gsap.to(this.chestGlow, {
       alpha: 0.55,
       duration: 0.22,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power1.inOut',
+    });
+
+    gsap.to(this.rimLight, {
+      alpha: 0.42,
+      duration: 0.2,
       yoyo: true,
       repeat: 1,
       ease: 'power1.inOut',
@@ -195,6 +210,8 @@ export class DragonActor {
 
   destroy(): void {
     this.breathTween?.kill();
+    this.chestGlowTween?.kill();
+    this.rimTween?.kill();
     this.container.removeAllListeners();
     this.container.destroy({ children: true });
   }
@@ -207,6 +224,10 @@ export class DragonActor {
 
     this.chestGlow.clear();
     this.chestGlow.circle(8, 20, 52).fill({ color: 0xf3a64e, alpha: 0.28 });
+
+    this.rimLight.clear();
+    this.rimLight.ellipse(0, -2, 156, 98).stroke({ color: 0xffd78d, width: 4, alpha: 0.24 });
+    this.rimLight.alpha = 0.24;
 
     this.tail.clear();
     this.tail.poly([-120, 30, -220, 78, -188, 94, -116, 70]).fill({ color: 0x2f2a2c, alpha: 0.96 });
@@ -227,7 +248,7 @@ export class DragonActor {
 
     this.mountSpriteLayers();
 
-    this.container.addChild(this.tail, this.wing, this.chestGlow, this.body, this.head, this.eyeLeft, this.eyeRight);
+    this.container.addChild(this.tail, this.wing, this.chestGlow, this.body, this.rimLight, this.head, this.eyeLeft, this.eyeRight);
   }
 
   private startIdleAnimations(): void {
@@ -241,9 +262,17 @@ export class DragonActor {
       onRepeat: () => this.callbacks.onBreath(),
     });
 
-    gsap.to(this.chestGlow, {
+    this.chestGlowTween = gsap.to(this.chestGlow, {
       alpha: 0.38,
       duration: 2.4,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+    });
+
+    this.rimTween = gsap.to(this.rimLight, {
+      alpha: 0.32,
+      duration: this.reducedMotion ? 3.8 : 2.6,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut',
@@ -269,8 +298,12 @@ export class DragonActor {
       repeat: 1,
       ease: 'power1.inOut',
       onStart: () => {
+        this.rimLight.alpha = 0.46;
         this.callbacks.onSmoke(this.baseX + 92, this.baseY - 90);
         this.callbacks.onSmoke(this.baseX + 58, this.baseY - 94);
+      },
+      onComplete: () => {
+        this.rimLight.alpha = 0.24;
       },
     });
   }

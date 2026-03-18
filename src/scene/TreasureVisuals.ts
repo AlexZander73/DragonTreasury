@@ -3,6 +3,7 @@ import type { HoardItem, Rarity } from '../types/content';
 import { sizeClassToPixels } from '../physics/physicsConfig';
 import { withBase } from '../utils/basePath';
 import { rarityWeight } from '../utils/rarityStyles';
+import { hashString } from '../utils/seededRandom';
 
 const rarityColor: Record<Rarity, number> = {
   common: 0xb39670,
@@ -35,10 +36,13 @@ export interface TreasureVisual {
   container: Container;
   shadow: Graphics;
   glow: Graphics;
+  caustic: Graphics | null;
+  glint: Graphics;
   sprite: Sprite;
   core: Graphics;
   ring: Graphics;
   radius: number;
+  phase: number;
   baseGlowAlpha: number;
 }
 
@@ -201,6 +205,36 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   sprite.alpha = 0.94;
   sprite.zIndex = 2;
 
+  const caustic =
+    item.type === 'gem' || item.type === 'arcane-crystal' || item.rarity === 'legendary' || item.rarity === 'epic'
+      ? new Graphics()
+      : null;
+  if (caustic) {
+    caustic.ellipse(0, 0, radius * 0.92, radius * 0.46).fill({
+      color: item.type === 'arcane-crystal' ? 0x8ce6ea : 0xffe2a4,
+      alpha: item.type === 'arcane-crystal' ? 0.14 : 0.1,
+    });
+    caustic.blendMode = 'add';
+    caustic.rotation = -0.32;
+    caustic.zIndex = 2.1;
+  }
+
+  const glint = new Graphics();
+  glint
+    .poly([
+      -radius * 0.66,
+      -radius * 1.05,
+      -radius * 0.4,
+      -radius * 1.05,
+      radius * 0.64,
+      radius * 1.02,
+      radius * 0.4,
+      radius * 1.02,
+    ])
+    .fill({ color: 0xfff6df, alpha: 0.18 });
+  glint.zIndex = 2.3;
+  glint.alpha = 0.08;
+
   const core = new Graphics();
   drawTypeShape(core, item, radius, color);
   core.alpha = 0.24;
@@ -231,16 +265,25 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
     container.addChild(marker);
   }
 
-  container.addChild(shadow, glow, sprite, core, ring);
+  if (caustic) {
+    container.addChild(shadow, glow, sprite, caustic, glint, core, ring);
+  } else {
+    container.addChild(shadow, glow, sprite, glint, core, ring);
+  }
+
+  const phase = (hashString(item.id) % 628) / 100;
 
   return {
     container,
     shadow,
     glow,
+    caustic,
+    glint,
     sprite,
     core,
     ring,
     radius,
+    phase,
     baseGlowAlpha,
   };
 };
@@ -254,9 +297,10 @@ export const setTreasureVisualState = (
     featuredMode: boolean;
     featured: boolean;
     reducedMotion: boolean;
+    time: number;
   },
 ): void => {
-  const { selected, hovered, visible, featuredMode, featured, reducedMotion } = options;
+  const { selected, hovered, visible, featuredMode, featured, reducedMotion, time } = options;
 
   visual.container.alpha = visible ? 1 : 0.17;
   visual.glow.alpha = visible ? visual.baseGlowAlpha : 0.02;
@@ -275,6 +319,17 @@ export const setTreasureVisualState = (
   if (!reducedMotion && hovered) {
     visual.glow.rotation += 0.01;
     visual.sprite.rotation += 0.006;
+  }
+
+  const shimmerBase = selected ? 0.22 : hovered ? 0.18 : 0.08;
+  const shimmerWave = reducedMotion ? 0.7 : 0.75 + 0.25 * Math.sin(time * 2 + visual.phase);
+  visual.glint.alpha = visible ? shimmerBase * shimmerWave : 0.02;
+  visual.glint.x = reducedMotion ? 0 : Math.sin(time * 1.5 + visual.phase) * (visual.radius * 0.14);
+
+  if (visual.caustic) {
+    const causticWave = reducedMotion ? 0.75 : 0.68 + 0.32 * Math.sin(time * 1.2 + visual.phase * 1.2);
+    visual.caustic.alpha = visible ? causticWave * (selected ? 0.22 : 0.15) : 0.03;
+    visual.caustic.rotation = -0.32 + (reducedMotion ? 0 : Math.sin(time * 0.8 + visual.phase) * 0.08);
   }
 
   if (featuredMode && !featured) {

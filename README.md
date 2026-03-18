@@ -82,6 +82,12 @@ Runtime content source:
 
 - `src/content/seedData.ts`
 
+Current seed includes:
+
+- A curated sample archive
+- Real catalog entries from your provided `Products` and `Projects` lists
+- Additional generated placeholders for interaction/scale testing
+
 Key schema (`HoardItem`) includes:
 
 - id, title, short/long descriptions

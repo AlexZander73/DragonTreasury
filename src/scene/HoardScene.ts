@@ -461,6 +461,7 @@ export class HoardScene {
         featuredMode: this.featuredMode,
         featured: Boolean(entity.item.featured || entity.item.rarity === 'legendary'),
         reducedMotion: this.reducedMotion,
+        time: this.drift,
       });
 
       if (!this.reducedMotion && Math.random() < rarityWeight[entity.item.rarity] * 0.0018) {
