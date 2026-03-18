@@ -1,14 +1,15 @@
-<svg width="176" height="112" viewBox="0 0 176 112" xmlns="http://www.w3.org/2000/svg">
+<svg width="196" height="126" viewBox="0 0 196 126" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="sBase" x1="20" y1="26" x2="156" y2="86" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F8E6C7"/>
-      <stop offset="0.52" stop-color="#D0A173"/>
-      <stop offset="1" stop-color="#6C4527"/>
+    <linearGradient id="scrollBase" x1="20" y1="26" x2="172" y2="94" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9E7C9"/>
+      <stop offset="0.52" stop-color="#D19F70"/>
+      <stop offset="1" stop-color="#6D4528"/>
     </linearGradient>
   </defs>
-  <rect x="20" y="24" width="136" height="64" rx="18" fill="url(#sBase)"/>
-  <rect x="34" y="36" width="108" height="40" rx="12" fill="#F4D8B4" fill-opacity="0.32"/>
-  <circle cx="30" cy="56" r="16" fill="#6A452A"/>
-  <circle cx="146" cy="56" r="16" fill="#6A452A"/>
-  <path d="M44 56h88" stroke="#764E31" stroke-opacity="0.72" stroke-width="4" stroke-linecap="round"/>
+  <rect x="22" y="26" width="152" height="74" rx="20" fill="url(#scrollBase)"/>
+  <rect x="38" y="40" width="120" height="46" rx="13" fill="#F4D9B8" fill-opacity="0.34"/>
+  <circle cx="34" cy="63" r="18" fill="#6A452A"/>
+  <circle cx="162" cy="63" r="18" fill="#6A452A"/>
+  <path d="M50 63h96" stroke="#764D31" stroke-opacity="0.72" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64 50h68M64 76h68" stroke="#A87A53" stroke-opacity="0.5" stroke-width="3" stroke-linecap="round"/>
 </svg>

@@ -1,0 +1,15 @@
+<svg width="210" height="110" viewBox="0 0 210 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="jawBase" x1="20" y1="18" x2="192" y2="98" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5A4340"/>
+      <stop offset="1" stop-color="#241C24"/>
+    </linearGradient>
+  </defs>
+  <path d="M16 56C42 38 84 28 140 32C170 34 188 40 198 50C188 66 172 78 148 84C90 98 42 90 16 56Z" fill="url(#jawBase)"/>
+  <g fill="#EEDFC0" fill-opacity="0.82">
+    <path d="M74 56L80 44L86 56Z"/>
+    <path d="M98 56L104 42L110 56Z"/>
+    <path d="M122 56L128 44L134 56Z"/>
+    <path d="M146 54L152 42L158 54Z"/>
+  </g>
+</svg>

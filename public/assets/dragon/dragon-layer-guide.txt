@@ -3,15 +3,20 @@ Dragon layered asset replacement guide:
 Expected optional files:
 - dragon-body.png
 - dragon-head.png
+- dragon-jaw.png
 - dragon-tail.png
 - dragon-wing.png
 - dragon-eye.png
 - dragon-glow.png
+- dragon-horn.png
+- dragon-scales.png
+- dragon-spines.png
 
 All should be transparent PNG/WebP sized relative to a 512x512 anchor.
 Pivot assumptions in code:
 - body center: (0, 0)
 - head offset: (+82, -72)
+- jaw offset: (+102, -40)
 - tail offset: (-120, +30)
 - wing offset: (-26, -46)
 

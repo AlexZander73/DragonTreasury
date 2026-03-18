@@ -1,16 +1,26 @@
-<svg width="640" height="400" viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg">
+<svg width="700" height="420" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="bMain" cx="48%" cy="42%" r="58%">
-      <stop stop-color="#6B5843"/>
-      <stop offset="0.56" stop-color="#3D3132"/>
-      <stop offset="1" stop-color="#1D1820"/>
+    <radialGradient id="bodyBase" cx="46%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#6F5A43"/>
+      <stop offset="0.48" stop-color="#443733"/>
+      <stop offset="1" stop-color="#1F1A24"/>
     </radialGradient>
-    <linearGradient id="bBelly" x1="320" y1="166" x2="320" y2="306" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7B5A43" stop-opacity="0.66"/>
-      <stop offset="1" stop-color="#3E2B26" stop-opacity="0.58"/>
+    <linearGradient id="belly" x1="350" y1="170" x2="350" y2="330" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8D6A4B" stop-opacity="0.84"/>
+      <stop offset="1" stop-color="#3D2B24" stop-opacity="0.8"/>
     </linearGradient>
   </defs>
-  <ellipse cx="310" cy="210" rx="250" ry="140" fill="url(#bMain)"/>
-  <ellipse cx="320" cy="242" rx="206" ry="96" fill="url(#bBelly)"/>
-  <path d="M122 190C180 148 250 132 326 136C402 140 480 164 530 212" stroke="#8D694D" stroke-opacity="0.25" stroke-width="8" stroke-linecap="round"/>
+  <ellipse cx="332" cy="224" rx="266" ry="148" fill="url(#bodyBase)"/>
+  <ellipse cx="334" cy="254" rx="210" ry="102" fill="url(#belly)"/>
+  <g fill="#887058" fill-opacity="0.38">
+    <ellipse cx="186" cy="226" rx="22" ry="12"/>
+    <ellipse cx="224" cy="210" rx="24" ry="13"/>
+    <ellipse cx="266" cy="198" rx="24" ry="14"/>
+    <ellipse cx="308" cy="194" rx="26" ry="14"/>
+    <ellipse cx="350" cy="194" rx="26" ry="14"/>
+    <ellipse cx="392" cy="200" rx="24" ry="13"/>
+    <ellipse cx="432" cy="212" rx="24" ry="13"/>
+    <ellipse cx="470" cy="226" rx="22" ry="12"/>
+  </g>
+  <path d="M116 244C186 168 324 136 464 174" stroke="#9A7A5C" stroke-opacity="0.28" stroke-width="9" stroke-linecap="round"/>
 </svg>

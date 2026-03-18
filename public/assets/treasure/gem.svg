@@ -1,16 +1,17 @@
-<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+<svg width="152" height="152" viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="gemBase" x1="18" y1="16" x2="106" y2="112" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#EEFAFF"/>
-      <stop offset="0.45" stop-color="#78B7FF"/>
-      <stop offset="1" stop-color="#274F97"/>
+    <linearGradient id="gemMain" x1="22" y1="18" x2="126" y2="132" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2FBFF"/>
+      <stop offset="0.44" stop-color="#7AB8FF"/>
+      <stop offset="1" stop-color="#274A91"/>
     </linearGradient>
-    <linearGradient id="gemInner" x1="64" y1="28" x2="64" y2="108" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#CDE9FF" stop-opacity="0.75"/>
-      <stop offset="1" stop-color="#4A75CD" stop-opacity="0.35"/>
+    <linearGradient id="gemInner" x1="76" y1="34" x2="76" y2="126" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D6EEFF" stop-opacity="0.76"/>
+      <stop offset="1" stop-color="#4C74C8" stop-opacity="0.34"/>
     </linearGradient>
   </defs>
-  <path d="M64 10 112 46 90 114 38 114 16 46Z" fill="url(#gemBase)"/>
-  <path d="M64 24 96 48 82 102 46 102 32 48Z" fill="url(#gemInner)"/>
-  <path d="M64 10 64 114M16 46h96M38 114 64 52 90 114" stroke="#F2FAFF" stroke-opacity="0.55" stroke-width="3"/>
+  <path d="M76 12 134 54 108 140 44 140 18 54Z" fill="url(#gemMain)"/>
+  <path d="M76 30 112 56 94 124 58 124 40 56Z" fill="url(#gemInner)"/>
+  <path d="M76 12 76 140M18 54h116M44 140 76 62 108 140" stroke="#F4FBFF" stroke-opacity="0.56" stroke-width="4"/>
+  <path d="M40 56 76 92 112 56" stroke="#C6E8FF" stroke-opacity="0.46" stroke-width="3" stroke-linecap="round"/>
 </svg>

@@ -7,5 +7,5 @@ Runtime uses these layers as optional sprite overlays:
 - `cave-fog.svg` (soft atmospheric haze)
 - `cave-color-grade.svg` (warm + teal grading pass)
 - `cave-vignette.svg` (edge darkening and focus)
-
-`src/scene/HoardScene.ts` still draws vector fallback geometry beneath these.
+- `torch-light.svg` (dynamic moving light bloom)
+- `foreground-mist.svg` (near-camera depth mist)

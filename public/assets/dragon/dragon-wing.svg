@@ -1,11 +1,15 @@
-<svg width="360" height="240" viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg">
+<svg width="380" height="260" viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="wMain" x1="42" y1="18" x2="260" y2="220" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#433941"/>
-      <stop offset="1" stop-color="#201A26"/>
+    <linearGradient id="wingBase" x1="48" y1="24" x2="286" y2="236" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4B4047"/>
+      <stop offset="1" stop-color="#1E1927"/>
+    </linearGradient>
+    <linearGradient id="membrane" x1="100" y1="42" x2="286" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7A5C66" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#342733" stop-opacity="0.38"/>
     </linearGradient>
   </defs>
-  <path d="M36 206 72 24 336 34 260 226Z" fill="url(#wMain)"/>
-  <path d="M80 48 122 196M154 42 176 204M228 40 222 212" stroke="#705B69" stroke-opacity="0.5" stroke-width="5" stroke-linecap="round"/>
-  <path d="M98 82 286 72" stroke="#8C7180" stroke-opacity="0.24" stroke-width="5" stroke-linecap="round"/>
+  <path d="M34 226L86 24L354 34L268 240Z" fill="url(#wingBase)"/>
+  <path d="M90 50L286 70L240 222L118 204Z" fill="url(#membrane)"/>
+  <path d="M94 54L132 210M166 52L184 216M238 56L224 220" stroke="#89707F" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round"/>
 </svg>

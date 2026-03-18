@@ -1,6 +1,6 @@
 # Treasure Sprite Set
 
-This folder now includes a first-pass stylized sprite set used at runtime:
+This folder ships with polished medieval-fantasy SVG sprites used at runtime:
 
 - `coin.svg`
 - `gem.svg`
@@ -11,4 +11,4 @@ This folder now includes a first-pass stylized sprite set used at runtime:
 - `arcane-crystal.svg`
 - `scroll-capsule.svg`
 
-`src/scene/TreasureVisuals.ts` uses these sprites first and keeps vector fallback geometry beneath them.
+`src/scene/TreasureVisuals.ts` layers these with dynamic glints, caustics, occlusion, and soft shadow treatment.

@@ -8,7 +8,7 @@ import { AudioManager } from '../audio/AudioManager';
 import { PHYSICS_LIMITS } from '../physics/physicsConfig';
 import { HoardPhysics } from '../physics/HoardPhysics';
 import { withBase } from '../utils/basePath';
-import { clamp } from '../utils/math';
+import { clamp, lerp } from '../utils/math';
 import { rarityWeight } from '../utils/rarityStyles';
 import { DragonActor } from './DragonActor';
 import { ParticleSystem } from './ParticleSystem';
@@ -51,6 +51,8 @@ export class HoardScene {
   private dragonLayer = new Container();
   private fxLayer = new Container();
   private overlayLayer = new Container();
+  private torchLight: Sprite | null = null;
+  private foregroundMist: Sprite | null = null;
 
   private entities = new Map<string, TreasureEntity>();
   private itemsById = new Map<string, HoardItem>();
@@ -112,6 +114,7 @@ export class HoardScene {
 
     this.world.addChild(this.bgLayer, this.midLayer, this.treasureLayer, this.dragonLayer, this.fxLayer, this.overlayLayer);
     this.app.stage.addChild(this.world);
+    this.treasureLayer.sortableChildren = true;
 
     this.drawBackground();
     this.fxLayer.addChild(this.particles.container);
@@ -452,8 +455,10 @@ export class HoardScene {
       const body = entity.body;
       entity.visual.container.position.set(body.position.x, body.position.y);
       entity.visual.container.rotation = body.angle;
+      entity.visual.container.zIndex = body.position.y;
 
       const isVisible = this.visibleItemIds.has(id);
+      const depthScale = clamp(0.82 + (body.position.y / Math.max(1, sceneH)) * 0.34, 0.82, 1.17);
       setTreasureVisualState(entity.visual, {
         selected: id === this.selectedItemId,
         hovered: id === this.hoverItemId,
@@ -462,6 +467,7 @@ export class HoardScene {
         featured: Boolean(entity.item.featured || entity.item.rarity === 'legendary'),
         reducedMotion: this.reducedMotion,
         time: this.drift,
+        depthScale,
       });
 
       if (!this.reducedMotion && Math.random() < rarityWeight[entity.item.rarity] * 0.0018) {
@@ -486,11 +492,28 @@ export class HoardScene {
     this.treasureLayer.y = parallaxY * -4;
     this.dragonLayer.x = parallaxX * -12 + driftX * 0.2;
     this.dragonLayer.y = parallaxY * -8 + driftY * 0.25;
+
+    if (this.torchLight) {
+      const targetX = this.host.clientWidth * (0.36 + this.pointerNormX * 0.34);
+      const targetY = this.host.clientHeight * (0.32 + this.pointerNormY * 0.22);
+      this.torchLight.x = lerp(this.torchLight.x, targetX, 0.06);
+      this.torchLight.y = lerp(this.torchLight.y, targetY, 0.06);
+      const pulse = this.reducedMotion ? 0.9 : 0.85 + Math.sin(this.drift * 2.6) * 0.08;
+      this.torchLight.alpha = 0.52 * pulse;
+    }
+
+    if (this.foregroundMist) {
+      const mistPulse = this.reducedMotion ? 0.9 : 0.82 + Math.sin(this.drift * 0.7) * 0.08;
+      this.foregroundMist.alpha = 0.28 * mistPulse;
+      this.foregroundMist.x = parallaxX * -8;
+      this.foregroundMist.y = parallaxY * -5;
+    }
   }
 
   private drawBackground(): void {
     this.bgLayer.removeChildren();
     this.midLayer.removeChildren();
+    this.overlayLayer.removeChildren();
 
     const w = this.host.clientWidth;
     const h = this.host.clientHeight;
@@ -547,6 +570,21 @@ export class HoardScene {
 
     this.bgLayer.addChild(haze, backdrop, colorGrade, wallGlow, farRocks);
     this.midLayer.addChild(midground, fog, fogOverlay, mound, vignetteOverlay);
+
+    this.torchLight = Sprite.from(withBase('/assets/backgrounds/torch-light.svg'));
+    this.torchLight.anchor.set(0.5);
+    this.torchLight.width = w * 0.7;
+    this.torchLight.height = h * 0.58;
+    this.torchLight.position.set(w * 0.5, h * 0.34);
+    this.torchLight.alpha = 0.5;
+    this.torchLight.blendMode = 'add';
+
+    this.foregroundMist = Sprite.from(withBase('/assets/backgrounds/foreground-mist.svg'));
+    this.foregroundMist.width = w;
+    this.foregroundMist.height = h;
+    this.foregroundMist.alpha = 0.26;
+
+    this.overlayLayer.addChild(this.torchLight, this.foregroundMist);
   }
 
   private positionDragon(): void {

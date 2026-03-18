@@ -1,14 +1,15 @@
-<svg width="160" height="128" viewBox="0 0 160 128" xmlns="http://www.w3.org/2000/svg">
+<svg width="190" height="148" viewBox="0 0 190 148" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="aBase" x1="24" y1="18" x2="136" y2="112" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F4D7AA"/>
-      <stop offset="0.5" stop-color="#C28855"/>
-      <stop offset="1" stop-color="#5A321E"/>
+    <linearGradient id="artifactBase" x1="26" y1="20" x2="160" y2="126" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5DAB0"/>
+      <stop offset="0.52" stop-color="#C28754"/>
+      <stop offset="1" stop-color="#5B3320"/>
     </linearGradient>
   </defs>
-  <rect x="16" y="16" width="128" height="96" rx="18" fill="url(#aBase)"/>
-  <rect x="28" y="28" width="104" height="72" rx="14" fill="#A16D43" fill-opacity="0.35"/>
-  <circle cx="80" cy="64" r="19" fill="#FFE1A2" fill-opacity="0.34"/>
-  <path d="M36 42h88M38 86h84" stroke="#6E4728" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>
-  <path d="M80 46v36M62 64h36" stroke="#F7DEB1" stroke-opacity="0.35" stroke-width="3" stroke-linecap="round"/>
+  <rect x="16" y="16" width="158" height="116" rx="20" fill="url(#artifactBase)"/>
+  <rect x="30" y="30" width="130" height="88" rx="14" fill="#A47047" fill-opacity="0.35"/>
+  <circle cx="95" cy="74" r="22" fill="#FFE2A6" fill-opacity="0.34"/>
+  <path d="M40 50h110M42 102h106" stroke="#6F4827" stroke-opacity="0.58" stroke-width="5" stroke-linecap="round"/>
+  <path d="M95 48v52M69 74h52" stroke="#F8DEB4" stroke-opacity="0.36" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="95" cy="74" r="33" fill="none" stroke="#FFE9C4" stroke-opacity="0.34" stroke-width="2" stroke-dasharray="4 5"/>
 </svg>

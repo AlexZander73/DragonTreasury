@@ -1,12 +1,13 @@
-<svg width="144" height="128" viewBox="0 0 144 128" xmlns="http://www.w3.org/2000/svg">
+<svg width="168" height="148" viewBox="0 0 168 148" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="cBase" x1="20" y1="18" x2="124" y2="112" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F0A1AB"/>
-      <stop offset="0.5" stop-color="#B94E62"/>
-      <stop offset="1" stop-color="#3A141E"/>
+    <linearGradient id="cursedBase" x1="22" y1="20" x2="146" y2="130" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2A4AE"/>
+      <stop offset="0.5" stop-color="#B84E63"/>
+      <stop offset="1" stop-color="#37131D"/>
     </linearGradient>
   </defs>
-  <path d="M18 26 124 20 132 66 104 112 30 106 12 64Z" fill="url(#cBase)"/>
-  <path d="M46 28 94 98M82 22 58 108M20 66 132 58" stroke="#280C12" stroke-opacity="0.66" stroke-width="4" stroke-linecap="round"/>
-  <ellipse cx="86" cy="42" rx="16" ry="10" fill="#FFD0D6" fill-opacity="0.22"/>
+  <path d="M18 30 144 22 154 74 120 132 36 124 14 70Z" fill="url(#cursedBase)"/>
+  <path d="M50 30 104 114M96 24 66 126M22 72 154 62" stroke="#260B12" stroke-opacity="0.7" stroke-width="5" stroke-linecap="round"/>
+  <path d="M40 42h80" stroke="#FFD2D8" stroke-opacity="0.22" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="96" cy="46" rx="18" ry="10" fill="#FFD0D6" fill-opacity="0.24"/>
 </svg>

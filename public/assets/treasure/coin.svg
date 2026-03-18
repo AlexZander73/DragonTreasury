@@ -1,18 +1,19 @@
-<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+<svg width="152" height="152" viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="coinMain" cx="44%" cy="36%" r="60%">
-      <stop stop-color="#FFF0BF"/>
-      <stop offset="0.52" stop-color="#E2B460"/>
-      <stop offset="1" stop-color="#7A4F24"/>
+    <radialGradient id="coinBase" cx="42%" cy="34%" r="62%">
+      <stop stop-color="#FFF2C8"/>
+      <stop offset="0.5" stop-color="#E1B560"/>
+      <stop offset="1" stop-color="#754A22"/>
     </radialGradient>
-    <radialGradient id="coinInner" cx="50%" cy="45%" r="50%">
-      <stop stop-color="#FCE3A8" stop-opacity="0.92"/>
-      <stop offset="1" stop-color="#B68139" stop-opacity="0.5"/>
+    <radialGradient id="coinInner" cx="50%" cy="46%" r="52%">
+      <stop stop-color="#FCE4AA" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#B9843C" stop-opacity="0.55"/>
     </radialGradient>
   </defs>
-  <circle cx="64" cy="64" r="53" fill="url(#coinMain)"/>
-  <circle cx="64" cy="64" r="43" fill="url(#coinInner)"/>
-  <circle cx="64" cy="64" r="51" fill="none" stroke="#FFE9BE" stroke-opacity="0.44" stroke-width="3"/>
-  <path d="M46 56h36M44 68h40M50 80h28" stroke="#6C4722" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="46" cy="42" r="7" fill="#FFF0C2" fill-opacity="0.36"/>
+  <circle cx="76" cy="76" r="62" fill="url(#coinBase)"/>
+  <circle cx="76" cy="76" r="50" fill="url(#coinInner)"/>
+  <circle cx="76" cy="76" r="60" fill="none" stroke="#FFEBC4" stroke-opacity="0.46" stroke-width="4"/>
+  <circle cx="76" cy="76" r="42" fill="none" stroke="#6C4723" stroke-opacity="0.44" stroke-width="3" stroke-dasharray="5 4"/>
+  <path d="M54 60h44M50 76h52M56 92h40" stroke="#6A4320" stroke-opacity="0.56" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="52" cy="46" r="8" fill="#FFF4D0" fill-opacity="0.34"/>
 </svg>

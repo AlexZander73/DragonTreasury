@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Text } from 'pixi.js';
+import { BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
 import type { HoardItem, Rarity } from '../types/content';
 import { sizeClassToPixels } from '../physics/physicsConfig';
 import { withBase } from '../utils/basePath';
@@ -35,6 +35,8 @@ const typeColorOverride: Partial<Record<HoardItem['type'], number>> = {
 export interface TreasureVisual {
   container: Container;
   shadow: Graphics;
+  castShadow: Graphics;
+  occlusion: Graphics;
   glow: Graphics;
   caustic: Graphics | null;
   glint: Graphics;
@@ -43,8 +45,12 @@ export interface TreasureVisual {
   ring: Graphics;
   radius: number;
   phase: number;
+  depthScale: number;
   baseGlowAlpha: number;
 }
+
+const SOFT_SHADOW_FILTER = new BlurFilter({ strength: 4, quality: 2 });
+const SOFT_GLOW_FILTER = new BlurFilter({ strength: 2, quality: 1 });
 
 const spriteScaleByType: Record<HoardItem['type'], { width: number; height: number }> = {
   coin: { width: 2.16, height: 2.16 },
@@ -185,8 +191,19 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   const color = typeColorOverride[item.type] ?? rarityColor[item.rarity];
 
   const shadow = new Graphics();
-  shadow.ellipse(0, radius * 0.65, radius * 0.95, radius * 0.38).fill({ color: 0x000000, alpha: 0.2 });
+  shadow.ellipse(0, radius * 0.68, radius * 0.88, radius * 0.28).fill({ color: 0x000000, alpha: 0.22 });
   shadow.zIndex = 0;
+  shadow.filters = [SOFT_SHADOW_FILTER];
+
+  const castShadow = new Graphics();
+  castShadow.ellipse(0, radius * 0.7, radius * 1.2, radius * 0.44).fill({ color: 0x000000, alpha: 0.14 });
+  castShadow.zIndex = -0.2;
+  castShadow.filters = [SOFT_SHADOW_FILTER];
+
+  const occlusion = new Graphics();
+  occlusion.circle(0, 0, radius * 0.96).fill({ color: 0x080608, alpha: 0.1 });
+  occlusion.zIndex = 1.8;
+  occlusion.blendMode = 'multiply';
 
   const glow = new Graphics();
   const baseGlowAlpha = 0.08 + rarityWeight[item.rarity] * 0.05;
@@ -195,6 +212,8 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
     alpha: baseGlowAlpha,
   });
   glow.zIndex = 1;
+  glow.filters = [SOFT_GLOW_FILTER];
+  glow.blendMode = 'add';
 
   const sprite = Sprite.from(withBase(`/assets/treasure/${item.type}.svg`));
   const spriteScale = spriteScaleByType[item.type];
@@ -234,6 +253,7 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
     .fill({ color: 0xfff6df, alpha: 0.18 });
   glint.zIndex = 2.3;
   glint.alpha = 0.08;
+  glint.blendMode = 'screen';
 
   const core = new Graphics();
   drawTypeShape(core, item, radius, color);
@@ -266,9 +286,9 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   }
 
   if (caustic) {
-    container.addChild(shadow, glow, sprite, caustic, glint, core, ring);
+    container.addChild(castShadow, shadow, glow, occlusion, sprite, caustic, glint, core, ring);
   } else {
-    container.addChild(shadow, glow, sprite, glint, core, ring);
+    container.addChild(castShadow, shadow, glow, occlusion, sprite, glint, core, ring);
   }
 
   const phase = (hashString(item.id) % 628) / 100;
@@ -276,6 +296,8 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   return {
     container,
     shadow,
+    castShadow,
+    occlusion,
     glow,
     caustic,
     glint,
@@ -284,6 +306,7 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
     ring,
     radius,
     phase,
+    depthScale: 1,
     baseGlowAlpha,
   };
 };
@@ -298,16 +321,20 @@ export const setTreasureVisualState = (
     featured: boolean;
     reducedMotion: boolean;
     time: number;
+    depthScale: number;
   },
 ): void => {
-  const { selected, hovered, visible, featuredMode, featured, reducedMotion, time } = options;
+  const { selected, hovered, visible, featuredMode, featured, reducedMotion, time, depthScale } = options;
 
   visual.container.alpha = visible ? 1 : 0.17;
   visual.glow.alpha = visible ? visual.baseGlowAlpha : 0.02;
   visual.sprite.alpha = visible ? (selected ? 1 : 0.94) : 0.28;
+  visual.depthScale = depthScale;
 
   const emphasis = selected ? 1.16 : hovered ? 1.07 : 1;
-  visual.container.scale.set(emphasis);
+  visual.container.scale.set(emphasis * depthScale);
+  visual.shadow.scale.set(0.95 * depthScale, 0.95);
+  visual.castShadow.scale.set(1 + (selected ? 0.1 : 0), 1 + (hovered ? 0.06 : 0));
 
   visual.ring.clear();
   if (selected || hovered || (featuredMode && featured)) {
@@ -331,6 +358,8 @@ export const setTreasureVisualState = (
     visual.caustic.alpha = visible ? causticWave * (selected ? 0.22 : 0.15) : 0.03;
     visual.caustic.rotation = -0.32 + (reducedMotion ? 0 : Math.sin(time * 0.8 + visual.phase) * 0.08);
   }
+
+  visual.occlusion.alpha = visible ? (selected ? 0.06 : 0.1) : 0.03;
 
   if (featuredMode && !featured) {
     visual.container.alpha *= 0.5;

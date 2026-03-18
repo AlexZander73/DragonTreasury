@@ -1,13 +1,14 @@
-<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+<svg width="164" height="164" viewBox="0 0 164 164" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="lCore" cx="50%" cy="40%" r="58%">
-      <stop stop-color="#FFF8D3"/>
-      <stop offset="0.5" stop-color="#F5C86A"/>
-      <stop offset="1" stop-color="#8B541C"/>
+    <radialGradient id="relicMain" cx="50%" cy="40%" r="58%">
+      <stop stop-color="#FFF8D8"/>
+      <stop offset="0.5" stop-color="#F4C969"/>
+      <stop offset="1" stop-color="#88521B"/>
     </radialGradient>
   </defs>
-  <path d="M72 8 88 42 126 42 96 64 108 102 72 82 36 102 48 64 18 42 56 42Z" fill="url(#lCore)"/>
-  <path d="M72 26 82 48 106 48 86 62 94 86 72 72 50 86 58 62 38 48 62 48Z" fill="#FFE7A7" fill-opacity="0.45"/>
-  <circle cx="72" cy="72" r="18" fill="none" stroke="#FFF4CB" stroke-opacity="0.72" stroke-width="3"/>
-  <circle cx="72" cy="72" r="7" fill="#FFF2C0" fill-opacity="0.55"/>
+  <path d="M82 10 101 48 143 48 110 74 124 117 82 93 40 117 54 74 21 48 63 48Z" fill="url(#relicMain)"/>
+  <path d="M82 30 94 54 121 54 98 72 108 98 82 82 56 98 66 72 43 54 70 54Z" fill="#FFE8A7" fill-opacity="0.46"/>
+  <circle cx="82" cy="82" r="20" fill="none" stroke="#FFF4CF" stroke-opacity="0.78" stroke-width="3"/>
+  <circle cx="82" cy="82" r="8" fill="#FFF2C4" fill-opacity="0.58"/>
+  <path d="M82 54v56M54 82h56" stroke="#7A4E22" stroke-opacity="0.44" stroke-width="3" stroke-linecap="round"/>
 </svg>
