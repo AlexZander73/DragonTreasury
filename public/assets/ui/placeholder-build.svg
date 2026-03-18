@@ -1,0 +1,10 @@
+<svg width="960" height="540" viewBox="0 0 960 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="540" fill="#110E12"/>
+  <rect x="120" y="120" width="720" height="300" rx="18" fill="#2A2F3A"/>
+  <rect x="170" y="170" width="620" height="200" rx="14" fill="#3C4A5A"/>
+  <circle cx="260" cy="270" r="42" fill="#A5B4C5"/>
+  <circle cx="360" cy="270" r="42" fill="#8FA3BC"/>
+  <circle cx="460" cy="270" r="42" fill="#70859D"/>
+  <path d="M620 200L740 270L620 340V200Z" fill="#D4A258"/>
+  <text x="130" y="95" fill="#E9D8B1" font-family="Georgia, serif" font-size="36">Physical Build Placeholder</text>
+</svg>

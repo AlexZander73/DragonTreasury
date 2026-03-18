@@ -1,0 +1,16 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(640 320) rotate(90) scale(300 700)">
+      <stop stop-color="#C8883C" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#0E0909"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#g1)"/>
+  <ellipse cx="640" cy="520" rx="420" ry="130" fill="#392416" fill-opacity="0.75"/>
+  <ellipse cx="840" cy="380" rx="180" ry="120" fill="#2E2429" fill-opacity="0.82"/>
+  <circle cx="870" cy="360" r="18" fill="#F1C464" fill-opacity="0.8"/>
+  <circle cx="450" cy="535" r="26" fill="#C89B49" fill-opacity="0.85"/>
+  <circle cx="520" cy="560" r="18" fill="#4F80CC" fill-opacity="0.85"/>
+  <circle cx="580" cy="548" r="14" fill="#A06AE0" fill-opacity="0.85"/>
+  <text x="58" y="90" fill="#F3D7A2" font-family="Georgia, serif" font-size="56">The Hoard</text>
+</svg>

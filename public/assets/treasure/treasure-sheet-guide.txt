@@ -1,0 +1,19 @@
+Treasure replacement guide:
+
+Provide optional sprites by type and rarity naming pattern:
+- coin-common.png
+- gem-rare.png
+- artifact-epic.png
+- legendary-relic-legendary.png
+- cursed-item-rare.png
+- metal-idol-epic.png
+- arcane-crystal-rare.png
+- scroll-capsule-common.png
+
+Recommended size buckets:
+small: 64x64
+medium: 96x96
+large: 128x128
+huge: 160x160
+
+Current implementation uses vector fallback primitives in src/scene/TreasureVisuals.ts.
