@@ -238,6 +238,7 @@ export class HoardScene {
       entity.visual.container.destroy({ children: true });
     }
     this.entities.clear();
+    this.physics.restartIntroDrop();
 
     items.forEach((item, index) => {
       const body = this.physics!.addItem(item, index, items.length);

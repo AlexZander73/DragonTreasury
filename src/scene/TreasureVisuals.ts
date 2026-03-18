@@ -41,6 +41,7 @@ export interface TreasureVisual {
   caustic: Graphics | null;
   glint: Graphics;
   sprite: Sprite;
+  textureOverlay: Sprite;
   core: Graphics;
   ring: Graphics;
   radius: number;
@@ -61,6 +62,17 @@ const spriteScaleByType: Record<HoardItem['type'], { width: number; height: numb
   'metal-idol': { width: 1.95, height: 2.7 },
   'arcane-crystal': { width: 2.05, height: 2.8 },
   'scroll-capsule': { width: 3.02, height: 1.9 },
+};
+
+const textureByType: Partial<Record<HoardItem['type'], string>> = {
+  coin: '/assets/textures/metal-grain.svg',
+  artifact: '/assets/textures/metal-grain.svg',
+  'legendary-relic': '/assets/textures/metal-grain.svg',
+  'metal-idol': '/assets/textures/metal-grain.svg',
+  'cursed-item': '/assets/textures/metal-grain.svg',
+  gem: '/assets/textures/gem-grain.svg',
+  'arcane-crystal': '/assets/textures/gem-grain.svg',
+  'scroll-capsule': '/assets/textures/metal-grain.svg',
 };
 
 const drawTypeShape = (core: Graphics, item: HoardItem, radius: number, color: number): void => {
@@ -224,6 +236,14 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   sprite.alpha = 0.94;
   sprite.zIndex = 2;
 
+  const textureOverlay = Sprite.from(withBase(textureByType[item.type] ?? '/assets/textures/metal-grain.svg'));
+  textureOverlay.anchor.set(0.5);
+  textureOverlay.width = sprite.width * 0.96;
+  textureOverlay.height = sprite.height * 0.96;
+  textureOverlay.alpha = 0.2;
+  textureOverlay.blendMode = item.type === 'gem' || item.type === 'arcane-crystal' ? 'screen' : 'multiply';
+  textureOverlay.zIndex = 2.05;
+
   const caustic =
     item.type === 'gem' || item.type === 'arcane-crystal' || item.rarity === 'legendary' || item.rarity === 'epic'
       ? new Graphics()
@@ -257,7 +277,7 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
 
   const core = new Graphics();
   drawTypeShape(core, item, radius, color);
-  core.alpha = 0.24;
+  core.alpha = 0.08;
   core.zIndex = 2.2;
 
   const ring = new Graphics();
@@ -286,9 +306,9 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   }
 
   if (caustic) {
-    container.addChild(castShadow, shadow, glow, occlusion, sprite, caustic, glint, core, ring);
+    container.addChild(castShadow, shadow, glow, occlusion, sprite, textureOverlay, caustic, glint, core, ring);
   } else {
-    container.addChild(castShadow, shadow, glow, occlusion, sprite, glint, core, ring);
+    container.addChild(castShadow, shadow, glow, occlusion, sprite, textureOverlay, glint, core, ring);
   }
 
   const phase = (hashString(item.id) % 628) / 100;
@@ -302,6 +322,7 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
     caustic,
     glint,
     sprite,
+    textureOverlay,
     core,
     ring,
     radius,
@@ -329,6 +350,7 @@ export const setTreasureVisualState = (
   visual.container.alpha = visible ? 1 : 0.17;
   visual.glow.alpha = visible ? visual.baseGlowAlpha : 0.02;
   visual.sprite.alpha = visible ? (selected ? 1 : 0.94) : 0.28;
+  visual.textureOverlay.alpha = visible ? (selected ? 0.26 : 0.2) : 0.06;
   visual.depthScale = depthScale;
 
   const emphasis = selected ? 1.16 : hovered ? 1.07 : 1;
@@ -352,6 +374,7 @@ export const setTreasureVisualState = (
   const shimmerWave = reducedMotion ? 0.7 : 0.75 + 0.25 * Math.sin(time * 2 + visual.phase);
   visual.glint.alpha = visible ? shimmerBase * shimmerWave : 0.02;
   visual.glint.x = reducedMotion ? 0 : Math.sin(time * 1.5 + visual.phase) * (visual.radius * 0.14);
+  visual.textureOverlay.rotation = reducedMotion ? 0 : Math.sin(time * 0.4 + visual.phase * 0.6) * 0.03;
 
   if (visual.caustic) {
     const causticWave = reducedMotion ? 0.75 : 0.68 + 0.32 * Math.sin(time * 1.2 + visual.phase * 1.2);

@@ -38,6 +38,8 @@ export class HoardPhysics {
   private arrangedTargets = new Map<string, Vector>();
   private arrangeMode: ArrangeMode = 'pile';
   private onCollision: ((payload: CollisionPayload) => void) | null = null;
+  private introElapsedMs = 0;
+  private readonly introDropMs = 1800;
 
   constructor(width: number, height: number) {
     this.width = width;
@@ -127,13 +129,15 @@ export class HoardPhysics {
 
   addItem(item: HoardItem, index: number, total: number): Body {
     const radius = sizeClassToPixels[item.physics.sizeClass];
-    const spawn = this.computeSpawnPoint(item, index, total);
+    const spawn = this.computeSpawnPoint(item, index, total, 'drop');
     const body = this.createBodyForType(item, spawn.x, spawn.y, radius);
 
     Body.setMass(body, item.physics.mass);
     body.restitution = item.physics.restitution;
     body.friction = item.physics.friction;
     body.frictionAir = item.physics.frictionAir ?? 0.03;
+    Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.45, y: 0 });
+    Sleeping.set(body, false);
 
     this.bodies.set(item.id, body);
     Composite.add(this.engine.world, body);
@@ -156,6 +160,7 @@ export class HoardPhysics {
     }
     this.bodies.clear();
     this.arrangedTargets.clear();
+    this.introElapsedMs = 0;
   }
 
   getBody(id: string): Body | undefined {
@@ -164,6 +169,10 @@ export class HoardPhysics {
 
   getBodies(): Map<string, Body> {
     return this.bodies;
+  }
+
+  restartIntroDrop(): void {
+    this.introElapsedMs = 0;
   }
 
   dragBody(id: string, x: number, y: number): void {
@@ -301,12 +310,13 @@ export class HoardPhysics {
 
   resetPile(items: HoardItem[]): void {
     const total = items.length;
+    this.introElapsedMs = this.introDropMs + 1;
     items.forEach((item, index) => {
       const body = this.bodies.get(item.id);
       if (!body) {
         return;
       }
-      const spawn = this.computeSpawnPoint(item, index, total);
+      const spawn = this.computeSpawnPoint(item, index, total, 'pile');
       Body.setPosition(body, spawn);
       Body.setVelocity(body, { x: 0, y: 0 });
       Body.setAngularVelocity(body, 0);
@@ -317,12 +327,13 @@ export class HoardPhysics {
   update(deltaMs: number): void {
     const frameMs = clamp(deltaMs, 1000 / 120, 1000 / 30);
     Engine.update(this.engine, frameMs);
+    this.introElapsedMs += frameMs;
 
     const centerX = this.width * 0.5;
     const centerY = this.height * 0.66;
 
     for (const [id, body] of this.bodies.entries()) {
-      if (this.arrangeMode !== 'pile') {
+      if (this.arrangeMode !== 'pile' && this.introElapsedMs >= this.introDropMs) {
         const target = this.arrangedTargets.get(id);
         if (target) {
           const dx = target.x - body.position.x;
@@ -382,7 +393,7 @@ export class HoardPhysics {
     return Bodies.rectangle(x, y, radius * 1.45, radius * 1.1, common);
   }
 
-  private computeSpawnPoint(item: HoardItem, index: number, total: number): Vector {
+  private computeSpawnPoint(item: HoardItem, index: number, total: number, mode: 'pile' | 'drop'): Vector {
     const rng = createSeededRng(`${item.id}:${index}`);
     const clusterIndex = index % 4;
     const clusterWidth = this.width * 0.18;
@@ -391,9 +402,17 @@ export class HoardPhysics {
     const spreadX = (rng() - 0.5) * 120;
     const spreadY = rng() * 100;
 
+    const pileY = this.height * 0.34 + spreadY + (index / Math.max(1, total)) * 48;
+    if (mode === 'pile') {
+      return {
+        x: clamp(baseX + spreadX, this.width * 0.15, this.width * 0.85),
+        y: pileY,
+      };
+    }
+
     return {
       x: clamp(baseX + spreadX, this.width * 0.15, this.width * 0.85),
-      y: this.height * 0.34 + spreadY + (index / Math.max(1, total)) * 48,
+      y: -120 - rng() * 180 - index * 3,
     };
   }
 
