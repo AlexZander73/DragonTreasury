@@ -1,0 +1,59 @@
+{
+  "name": "treasure",
+  "imagePng": "/assets/atlases/treasure-atlas.png",
+  "imageWebp": "/assets/atlases/treasure-atlas.webp",
+  "size": {
+    "w": 2048,
+    "h": 670
+  },
+  "frames": {
+    "coin": {
+      "x": 10,
+      "y": 10,
+      "w": 320,
+      "h": 320
+    },
+    "gem": {
+      "x": 340,
+      "y": 10,
+      "w": 320,
+      "h": 320
+    },
+    "artifact": {
+      "x": 670,
+      "y": 10,
+      "w": 290,
+      "h": 290
+    },
+    "legendary-relic": {
+      "x": 970,
+      "y": 10,
+      "w": 340,
+      "h": 340
+    },
+    "cursed-item": {
+      "x": 1320,
+      "y": 10,
+      "w": 300,
+      "h": 300
+    },
+    "metal-idol": {
+      "x": 1630,
+      "y": 10,
+      "w": 280,
+      "h": 280
+    },
+    "arcane-crystal": {
+      "x": 10,
+      "y": 360,
+      "w": 300,
+      "h": 300
+    },
+    "scroll-capsule": {
+      "x": 320,
+      "y": 360,
+      "w": 250,
+      "h": 250
+    }
+  }
+}

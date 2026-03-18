@@ -1,0 +1,71 @@
+{
+  "name": "dragon",
+  "imagePng": "/assets/atlases/dragon-atlas.png",
+  "imageWebp": "/assets/atlases/dragon-atlas.webp",
+  "size": {
+    "w": 2048,
+    "h": 750
+  },
+  "frames": {
+    "dragon-body": {
+      "x": 10,
+      "y": 10,
+      "w": 420,
+      "h": 420
+    },
+    "dragon-head": {
+      "x": 440,
+      "y": 10,
+      "w": 260,
+      "h": 260
+    },
+    "dragon-jaw": {
+      "x": 710,
+      "y": 10,
+      "w": 130,
+      "h": 130
+    },
+    "dragon-tail": {
+      "x": 850,
+      "y": 10,
+      "w": 230,
+      "h": 230
+    },
+    "dragon-wing": {
+      "x": 1090,
+      "y": 10,
+      "w": 280,
+      "h": 280
+    },
+    "dragon-eye": {
+      "x": 1380,
+      "y": 10,
+      "w": 50,
+      "h": 50
+    },
+    "dragon-horn": {
+      "x": 1440,
+      "y": 10,
+      "w": 150,
+      "h": 150
+    },
+    "dragon-scales": {
+      "x": 1600,
+      "y": 10,
+      "w": 180,
+      "h": 180
+    },
+    "dragon-spines": {
+      "x": 1790,
+      "y": 10,
+      "w": 140,
+      "h": 140
+    },
+    "dragon-glow": {
+      "x": 10,
+      "y": 440,
+      "w": 300,
+      "h": 300
+    }
+  }
+}

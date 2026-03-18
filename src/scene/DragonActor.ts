@@ -1,7 +1,8 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import gsap from 'gsap';
-import { withBase } from '../utils/basePath';
 import { clamp, lerp } from '../utils/math';
+import type { DragonAtlasFrameKey } from './atlasData';
+import { getDragonAtlasTexture } from './atlasTextures';
 
 interface DragonCallbacks {
   onSmoke: (x: number, y: number) => void;
@@ -31,7 +32,6 @@ export class DragonActor {
   private hornLeftSprite: Sprite | null = null;
   private hornRightSprite: Sprite | null = null;
   private glowSprite: Sprite | null = null;
-  private hideTextureSprite: Sprite | null = null;
   private eyeAuraLeft: Graphics | null = null;
   private eyeAuraRight: Graphics | null = null;
 
@@ -290,9 +290,9 @@ export class DragonActor {
 
   private draw(): void {
     this.body.clear();
-    this.body.ellipse(0, 0, 154, 98).fill({ color: 0x2c2428, alpha: 0.02 });
-    this.body.ellipse(6, 20, 138, 72).fill({ color: 0x433531, alpha: 0.02 });
-    this.body.stroke({ color: 0x7f5f43, width: 2.4, alpha: 0.03 });
+    this.body.ellipse(0, 0, 154, 98).fill({ color: 0x2c2428, alpha: 0.98 });
+    this.body.ellipse(6, 20, 138, 72).fill({ color: 0x433531, alpha: 0.74 });
+    this.body.stroke({ color: 0x7f5f43, width: 2.4, alpha: 0.58 });
 
     this.bodyScales.clear();
     this.bodyScales.ellipse(0, 0, 146, 92).fill({ color: 0xffffff, alpha: 0 });
@@ -306,24 +306,24 @@ export class DragonActor {
     this.rimLight.alpha = 0.28;
 
     this.tail.clear();
-    this.tail.poly([-122, 30, -226, 80, -192, 96, -116, 70]).fill({ color: 0x2f2a2c, alpha: 0.02 });
+    this.tail.poly([-122, 30, -226, 80, -192, 96, -116, 70]).fill({ color: 0x2f2a2c, alpha: 0.96 });
 
     this.wing.clear();
-    this.wing.poly([-28, -48, -102, -132, 22, -124, 72, -24]).fill({ color: 0x2b2730, alpha: 0.02 });
+    this.wing.poly([-28, -48, -102, -132, 22, -124, 72, -24]).fill({ color: 0x2b2730, alpha: 0.93 });
 
     this.neckSpines.clear();
-    this.neckSpines.poly([-40, -54, -2, -92, 20, -56]).fill({ color: 0x413336, alpha: 0.02 });
+    this.neckSpines.poly([-40, -54, -2, -92, 20, -56]).fill({ color: 0x413336, alpha: 0.85 });
 
     this.head.clear();
-    this.head.ellipse(84, -72, 54, 42).fill({ color: 0x352d32, alpha: 0.02 });
-    this.head.poly([108, -88, 146, -112, 128, -74]).fill({ color: 0x423438, alpha: 0.02 });
-    this.head.poly([104, -54, 142, -32, 120, -50]).fill({ color: 0x423438, alpha: 0.02 });
+    this.head.ellipse(84, -72, 54, 42).fill({ color: 0x352d32, alpha: 0.98 });
+    this.head.poly([108, -88, 146, -112, 128, -74]).fill({ color: 0x423438, alpha: 0.96 });
+    this.head.poly([104, -54, 142, -32, 120, -50]).fill({ color: 0x423438, alpha: 0.96 });
 
     this.eyeLeft.clear();
-    this.eyeLeft.circle(88, -84, 5).fill({ color: 0xffcf65, alpha: 0.05 });
+    this.eyeLeft.circle(88, -84, 5).fill({ color: 0xffcf65, alpha: 0.94 });
 
     this.eyeRight.clear();
-    this.eyeRight.circle(108, -82, 5).fill({ color: 0xffcf65, alpha: 0.05 });
+    this.eyeRight.circle(108, -82, 5).fill({ color: 0xffcf65, alpha: 0.94 });
 
     this.mountSpriteLayers();
 
@@ -415,27 +415,25 @@ export class DragonActor {
       return;
     }
 
-    const tailSprite = this.createSprite('/assets/dragon/dragon-tail.svg', 232, 126, -170, 86, 0.96);
-    const wingSprite = this.createSprite('/assets/dragon/dragon-wing.svg', 222, 174, -24, -78, 0.9);
-    this.glowSprite = this.createSprite('/assets/dragon/dragon-glow.svg', 214, 138, 8, 20, 0.36);
-    const bodySprite = this.createSprite('/assets/dragon/dragon-body.svg', 336, 220, 0, 0, 0.97);
-    const scalesSprite = this.createSprite('/assets/dragon/dragon-scales.svg', 188, 92, 0, 0, 0.72);
-    this.hideTextureSprite = this.createSprite('/assets/textures/dragon-hide.svg', 196, 98, 0, 2, 0.26);
-    this.hideTextureSprite.blendMode = 'multiply';
-    const spinesSprite = this.createSprite('/assets/dragon/dragon-spines.svg', 164, 60, -8, -66, 0.64);
+    const tailSprite = this.createSprite('dragon-tail', 232, 126, -170, 86, 0.96);
+    const wingSprite = this.createSprite('dragon-wing', 222, 174, -24, -78, 0.9);
+    this.glowSprite = this.createSprite('dragon-glow', 214, 138, 8, 20, 0.36);
+    const bodySprite = this.createSprite('dragon-body', 336, 220, 0, 0, 0.97);
+    const scalesSprite = this.createSprite('dragon-scales', 188, 92, 0, 0, 0.72);
+    const spinesSprite = this.createSprite('dragon-spines', 164, 60, -8, -66, 0.64);
 
-    const headSprite = this.createSprite('/assets/dragon/dragon-head.svg', 176, 132, 94, -74, 0.98);
+    const headSprite = this.createSprite('dragon-head', 176, 132, 94, -74, 0.98);
 
-    this.jawSprite = this.createSprite('/assets/dragon/dragon-jaw.svg', 118, 58, 126, -42, 0.96);
+    this.jawSprite = this.createSprite('dragon-jaw', 118, 58, 126, -42, 0.96);
     this.jawSprite.anchor.set(0.18, 0.26);
     this.jawSprite.rotation = this.jawBaseRotation;
 
-    this.hornLeftSprite = this.createSprite('/assets/dragon/dragon-horn.svg', 44, 58, 156, -132, 0.95);
-    this.hornRightSprite = this.createSprite('/assets/dragon/dragon-horn.svg', 42, 56, 178, -126, 0.9);
+    this.hornLeftSprite = this.createSprite('dragon-horn', 44, 58, 156, -132, 0.95);
+    this.hornRightSprite = this.createSprite('dragon-horn', 42, 56, 178, -126, 0.9);
     this.hornRightSprite.scale.x = -0.86;
 
-    const leftEyeCore = this.createSprite('/assets/dragon/dragon-eye.svg', 20, 10, 88, -84, 0.98);
-    const rightEyeCore = this.createSprite('/assets/dragon/dragon-eye.svg', 19, 10, 108, -82, 0.95);
+    const leftEyeCore = this.createSprite('dragon-eye', 20, 10, 88, -84, 0.98);
+    const rightEyeCore = this.createSprite('dragon-eye', 19, 10, 108, -82, 0.95);
     rightEyeCore.scale.x = 0.88;
 
     this.eyeAuraLeft = new Graphics();
@@ -451,7 +449,6 @@ export class DragonActor {
     this.chestGlow.addChild(this.glowSprite);
     this.body.addChild(bodySprite);
     this.bodyScales.addChild(scalesSprite);
-    this.bodyScales.addChild(this.hideTextureSprite);
     this.neckSpines.addChild(spinesSprite);
     this.head.addChild(headSprite, this.hornLeftSprite, this.hornRightSprite, this.jawSprite);
     this.eyeLeft.addChild(this.eyeAuraLeft, leftEyeCore);
@@ -469,8 +466,15 @@ export class DragonActor {
     this.spriteLayersMounted = true;
   }
 
-  private createSprite(path: string, width: number, height: number, x: number, y: number, alpha: number): Sprite {
-    const sprite = Sprite.from(withBase(path));
+  private createSprite(
+    atlasKey: DragonAtlasFrameKey,
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    alpha: number,
+  ): Sprite {
+    const sprite = new Sprite(getDragonAtlasTexture(atlasKey));
     sprite.anchor.set(0.5);
     sprite.width = width;
     sprite.height = height;
