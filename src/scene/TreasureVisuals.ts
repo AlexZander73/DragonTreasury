@@ -12,6 +12,14 @@ const rarityColor: Record<Rarity, number> = {
   legendary: 0xf2bf5a,
 };
 
+const raritySpriteTint: Record<Rarity, number> = {
+  common: 0xf6edd8,
+  uncommon: 0xe4f5e8,
+  rare: 0xdde8ff,
+  epic: 0xf0ddff,
+  legendary: 0xffefc9,
+};
+
 const typeColorOverride: Partial<Record<HoardItem['type'], number>> = {
   coin: 0xc7a35a,
   gem: 0x79b8ff,
@@ -189,6 +197,7 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   sprite.anchor.set(0.5);
   sprite.width = radius * spriteScale.width;
   sprite.height = radius * spriteScale.height;
+  sprite.tint = raritySpriteTint[item.rarity];
   sprite.alpha = 0.94;
   sprite.zIndex = 2;
 

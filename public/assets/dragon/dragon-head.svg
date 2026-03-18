@@ -1,12 +1,13 @@
 <svg width="260" height="220" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="g" x1="40" y1="40" x2="220" y2="188" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4F3E3D"/>
-      <stop offset="0.55" stop-color="#32282F"/>
-      <stop offset="1" stop-color="#201A24"/>
+    <linearGradient id="hMain" x1="40" y1="40" x2="220" y2="186" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5B4944"/>
+      <stop offset="0.55" stop-color="#3A2E34"/>
+      <stop offset="1" stop-color="#221C26"/>
     </linearGradient>
   </defs>
-  <ellipse cx="116" cy="108" rx="92" ry="70" fill="url(#g)"/>
-  <path d="M150 58 234 24 198 106Z" fill="#3A2D32"/>
-  <path d="M146 130 230 182 190 154Z" fill="#3A2D32"/>
+  <ellipse cx="116" cy="108" rx="92" ry="70" fill="url(#hMain)"/>
+  <path d="M150 58 234 24 198 106Z" fill="#3F3136"/>
+  <path d="M146 130 230 182 190 154Z" fill="#3A2D33"/>
+  <path d="M46 106h130" stroke="#7D5D54" stroke-opacity="0.34" stroke-width="7" stroke-linecap="round"/>
 </svg>

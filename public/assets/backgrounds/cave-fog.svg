@@ -1,9 +1,14 @@
 <svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="g1" cx="50%" cy="50%" r="50%">
-      <stop stop-color="#B69062" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#B69062" stop-opacity="0"/>
+    <radialGradient id="g1" cx="46%" cy="70%" r="42%">
+      <stop stop-color="#D1AF82" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#D1AF82" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="70%" cy="66%" r="26%">
+      <stop stop-color="#AC8965" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#AC8965" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <ellipse cx="860" cy="760" rx="720" ry="230" fill="url(#g1)"/>
+  <ellipse cx="840" cy="760" rx="760" ry="240" fill="url(#g1)"/>
+  <ellipse cx="1360" cy="714" rx="380" ry="140" fill="url(#g2)"/>
 </svg>

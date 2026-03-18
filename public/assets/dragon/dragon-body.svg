@@ -1,11 +1,16 @@
 <svg width="640" height="400" viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="g" cx="50%" cy="45%" r="56%">
-      <stop stop-color="#5D4B3A"/>
-      <stop offset="0.62" stop-color="#352B2D"/>
-      <stop offset="1" stop-color="#1F1A22"/>
+    <radialGradient id="bMain" cx="48%" cy="42%" r="58%">
+      <stop stop-color="#6B5843"/>
+      <stop offset="0.56" stop-color="#3D3132"/>
+      <stop offset="1" stop-color="#1D1820"/>
     </radialGradient>
+    <linearGradient id="bBelly" x1="320" y1="166" x2="320" y2="306" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B5A43" stop-opacity="0.66"/>
+      <stop offset="1" stop-color="#3E2B26" stop-opacity="0.58"/>
+    </linearGradient>
   </defs>
-  <ellipse cx="310" cy="210" rx="250" ry="140" fill="url(#g)"/>
-  <ellipse cx="320" cy="238" rx="206" ry="96" fill="#4A3A34" fill-opacity="0.65"/>
+  <ellipse cx="310" cy="210" rx="250" ry="140" fill="url(#bMain)"/>
+  <ellipse cx="320" cy="242" rx="206" ry="96" fill="url(#bBelly)"/>
+  <path d="M122 190C180 148 250 132 326 136C402 140 480 164 530 212" stroke="#8D694D" stroke-opacity="0.25" stroke-width="8" stroke-linecap="round"/>
 </svg>

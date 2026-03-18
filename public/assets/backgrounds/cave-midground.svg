@@ -1,10 +1,17 @@
 <svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="g" cx="50%" cy="65%" r="45%">
-      <stop stop-color="#70492D" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#241912" stop-opacity="0"/>
+    <radialGradient id="g" cx="50%" cy="66%" r="47%">
+      <stop stop-color="#9B6A3F" stop-opacity="0.54"/>
+      <stop offset="0.58" stop-color="#5D3B29" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#2A1B14" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="mound" x1="960" y1="590" x2="960" y2="980" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6F482A" stop-opacity="0.36"/>
+      <stop offset="1" stop-color="#20150F" stop-opacity="0.76"/>
+    </linearGradient>
   </defs>
-  <rect width="1920" height="1080" fill="none"/>
-  <ellipse cx="980" cy="720" rx="660" ry="250" fill="url(#g)"/>
+  <ellipse cx="980" cy="734" rx="680" ry="250" fill="url(#g)"/>
+  <ellipse cx="970" cy="878" rx="610" ry="170" fill="url(#mound)"/>
+  <ellipse cx="748" cy="824" rx="170" ry="70" fill="#503526" fill-opacity="0.3"/>
+  <ellipse cx="1170" cy="808" rx="180" ry="72" fill="#4A3225" fill-opacity="0.32"/>
 </svg>

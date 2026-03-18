@@ -502,6 +502,11 @@ export class HoardScene {
     backdrop.height = h;
     backdrop.alpha = 0.78;
 
+    const colorGrade = Sprite.from(withBase('/assets/backgrounds/cave-color-grade.svg'));
+    colorGrade.width = w;
+    colorGrade.height = h;
+    colorGrade.alpha = 0.72;
+
     const wallGlow = new Graphics();
     wallGlow.ellipse(w * 0.5, h * 0.33, w * 0.42, h * 0.28).fill({ color: 0x51361f, alpha: 0.33 });
     wallGlow.ellipse(w * 0.25, h * 0.48, w * 0.23, h * 0.2).fill({ color: 0x31221a, alpha: 0.42 });
@@ -528,14 +533,19 @@ export class HoardScene {
     const fogOverlay = Sprite.from(withBase('/assets/backgrounds/cave-fog.svg'));
     fogOverlay.width = w;
     fogOverlay.height = h;
-    fogOverlay.alpha = 0.45;
+    fogOverlay.alpha = 0.56;
+
+    const vignetteOverlay = Sprite.from(withBase('/assets/backgrounds/cave-vignette.svg'));
+    vignetteOverlay.width = w;
+    vignetteOverlay.height = h;
+    vignetteOverlay.alpha = 0.46;
 
     const mound = new Graphics();
     mound.ellipse(w * 0.5, h * 0.88, w * 0.44, h * 0.17).fill({ color: 0x231a16, alpha: 0.86 });
     mound.ellipse(w * 0.5, h * 0.9, w * 0.35, h * 0.12).fill({ color: 0x34261a, alpha: 0.38 });
 
-    this.bgLayer.addChild(haze, backdrop, wallGlow, farRocks);
-    this.midLayer.addChild(midground, fog, fogOverlay, mound);
+    this.bgLayer.addChild(haze, backdrop, colorGrade, wallGlow, farRocks);
+    this.midLayer.addChild(midground, fog, fogOverlay, mound, vignetteOverlay);
   }
 
   private positionDragon(): void {
