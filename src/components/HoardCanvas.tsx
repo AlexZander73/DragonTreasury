@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type { HoardItem } from '../types/content';
 import type { DragonColorTheme } from '../types/dragon';
+import type { BgmTrack, SceneTheme } from '../types/environment';
 import type { ArrangeMode } from '../types/filters';
 import { HoardScene } from '../scene/HoardScene';
 import { preloadAtlasTextures } from '../scene/atlasTextures';
@@ -20,6 +21,8 @@ interface HoardCanvasProps {
   reducedMotion: boolean;
   muted: boolean;
   dragonColorTheme: DragonColorTheme;
+  sceneTheme: SceneTheme;
+  bgmTrack: BgmTrack;
   quality: {
     maxParticles: number;
   };
@@ -39,6 +42,8 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
     reducedMotion,
     muted,
     dragonColorTheme,
+    sceneTheme,
+    bgmTrack,
     quality,
     onSelect,
     onDragonSecretUnlock,
@@ -51,8 +56,10 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
   const sceneRef = useRef<HoardScene | null>(null);
   const sceneReadyRef = useRef(false);
   const latestItemsRef = useRef<HoardItem[]>(items);
+  const latestVisibleItemIdsRef = useRef<Set<string>>(visibleItemIds);
 
   latestItemsRef.current = items;
+  latestVisibleItemIdsRef.current = visibleItemIds;
 
   useImperativeHandle(
     ref,
@@ -77,6 +84,8 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
       reducedMotion,
       muted,
       dragonColorTheme,
+      sceneTheme,
+      bgmTrack,
       quality: {
         maxParticles: quality.maxParticles,
         dragonDetail: 'full',
@@ -99,6 +108,7 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
         }
         sceneReadyRef.current = true;
         scene.setItems(latestItemsRef.current);
+        scene.setVisibleItems(latestVisibleItemIdsRef.current);
         onLoaded();
       })
       .catch((error) => {
@@ -126,6 +136,9 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
   }, [items]);
 
   useEffect(() => {
+    if (!sceneReadyRef.current) {
+      return;
+    }
     sceneRef.current?.setVisibleItems(visibleItemIds);
   }, [visibleItemIds]);
 
@@ -148,6 +161,14 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
   useEffect(() => {
     sceneRef.current?.setDragonColorTheme(dragonColorTheme);
   }, [dragonColorTheme]);
+
+  useEffect(() => {
+    sceneRef.current?.setSceneTheme(sceneTheme);
+  }, [sceneTheme]);
+
+  useEffect(() => {
+    sceneRef.current?.setBgmTrack(bgmTrack);
+  }, [bgmTrack]);
 
   useEffect(() => {
     sceneRef.current?.setReducedMotion(reducedMotion);

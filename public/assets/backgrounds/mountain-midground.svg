@@ -1,0 +1,16 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="iceGlow" cx="50%" cy="66%" r="44%">
+      <stop offset="0" stop-color="#9bc5e6" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#9bc5e6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="snowGround" x1="960" y1="640" x2="960" y2="970" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7ea0bb" stop-opacity="0.44"/>
+      <stop offset="1" stop-color="#22384b" stop-opacity="0.86"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="960" cy="760" rx="760" ry="250" fill="url(#iceGlow)"/>
+  <ellipse cx="960" cy="890" rx="650" ry="170" fill="url(#snowGround)"/>
+  <ellipse cx="760" cy="826" rx="180" ry="68" fill="#3d5971" fill-opacity="0.35"/>
+  <ellipse cx="1180" cy="820" rx="210" ry="72" fill="#405f78" fill-opacity="0.33"/>
+</svg>

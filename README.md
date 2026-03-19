@@ -127,6 +127,12 @@ See `src/content/importer/README.md`.
   - timeline
   - category
   - era
+- Scene switcher with distinct atmosphere:
+  - dragon cave
+  - castle vault
+  - mountain summit
+  - ancient forest
+  - sunken treasury
 - Filters: category, rarity, year range, tags, query, featured highlight.
 - Accessibility fallback: browse list mode for keyboard-first navigation.
 
@@ -150,6 +156,8 @@ Includes:
 Implemented in `src/audio/AudioManager.ts`.
 
 - Ambient cave loop (procedural fallback)
+- Scene-reactive ambient profiles (different EQ/noise per environment)
+- Optional BGM tracks (including auto scene-linked mode)
 - Collision accents
 - Select accents by rarity
 - Dragon huff/rumble cues

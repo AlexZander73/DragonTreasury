@@ -1,5 +1,6 @@
 import { CATEGORIES, RARITIES, type Category, type Rarity } from '../types/content';
 import { DRAGON_COLOR_THEME_LABELS, DRAGON_COLOR_THEMES, type DragonColorTheme } from '../types/dragon';
+import { BGM_TRACK_LABELS, BGM_TRACKS, SCENE_THEME_LABELS, SCENE_THEMES, type BgmTrack, type SceneTheme } from '../types/environment';
 import type { ArrangeMode, FilterState } from '../types/filters';
 
 interface OverlayControlsProps {
@@ -11,6 +12,10 @@ interface OverlayControlsProps {
   onMutedChange: (value: boolean) => void;
   reducedMotion: boolean;
   onReducedMotionChange: (value: boolean) => void;
+  sceneTheme: SceneTheme;
+  onSceneThemeChange: (value: SceneTheme) => void;
+  bgmTrack: BgmTrack;
+  onBgmTrackChange: (value: BgmTrack) => void;
   dragonColorTheme: DragonColorTheme;
   onDragonColorThemeChange: (value: DragonColorTheme) => void;
   featuredMode: boolean;
@@ -42,6 +47,10 @@ export const OverlayControls = ({
   onMutedChange,
   reducedMotion,
   onReducedMotionChange,
+  sceneTheme,
+  onSceneThemeChange,
+  bgmTrack,
+  onBgmTrackChange,
   dragonColorTheme,
   onDragonColorThemeChange,
   featuredMode,
@@ -188,6 +197,32 @@ export const OverlayControls = ({
           {DRAGON_COLOR_THEMES.map((theme) => (
             <option key={theme} value={theme}>
               {DRAGON_COLOR_THEME_LABELS[theme]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="controls-row">
+        <label htmlFor="sceneTheme">Scene</label>
+        <select
+          id="sceneTheme"
+          value={sceneTheme}
+          onChange={(event) => onSceneThemeChange(event.target.value as SceneTheme)}
+        >
+          {SCENE_THEMES.map((theme) => (
+            <option key={theme} value={theme}>
+              {SCENE_THEME_LABELS[theme]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="controls-row">
+        <label htmlFor="bgmTrack">Music Track</label>
+        <select id="bgmTrack" value={bgmTrack} onChange={(event) => onBgmTrackChange(event.target.value as BgmTrack)}>
+          {BGM_TRACKS.map((track) => (
+            <option key={track} value={track}>
+              {BGM_TRACK_LABELS[track]}
             </option>
           ))}
         </select>

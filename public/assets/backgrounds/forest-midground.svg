@@ -1,0 +1,16 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="fernGlow" cx="50%" cy="68%" r="44%">
+      <stop offset="0" stop-color="#8ebd6f" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#8ebd6f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="floor" x1="960" y1="640" x2="960" y2="980" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5f734b" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#24351f" stop-opacity="0.86"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="960" cy="760" rx="790" ry="240" fill="url(#fernGlow)"/>
+  <ellipse cx="960" cy="900" rx="680" ry="170" fill="url(#floor)"/>
+  <path d="M680 780C760 720 900 720 980 780C880 810 780 820 680 780Z" fill="#5f8b5c" fill-opacity="0.26"/>
+  <path d="M980 790C1080 730 1200 728 1280 788C1180 812 1080 820 980 790Z" fill="#679566" fill-opacity="0.24"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="forestFogA" cx="46%" cy="74%" r="42%">
+      <stop offset="0" stop-color="#b3d7a1" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#b3d7a1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="forestFogB" cx="72%" cy="66%" r="26%">
+      <stop offset="0" stop-color="#87b68b" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#87b68b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="860" cy="790" rx="760" ry="240" fill="url(#forestFogA)"/>
+  <ellipse cx="1380" cy="710" rx="340" ry="150" fill="url(#forestFogB)"/>
+</svg>

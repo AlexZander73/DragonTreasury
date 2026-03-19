@@ -1,6 +1,7 @@
 import type { ArrangeMode } from './filters';
 import type { HoardItem, Rarity } from './content';
 import type { DragonColorTheme } from './dragon';
+import type { BgmTrack, SceneTheme } from './environment';
 
 export interface SceneQuality {
   maxParticles: number;
@@ -27,6 +28,8 @@ export interface HoardSceneOptions {
   reducedMotion: boolean;
   muted: boolean;
   dragonColorTheme: DragonColorTheme;
+  sceneTheme: SceneTheme;
+  bgmTrack: BgmTrack;
   quality: SceneQuality;
 }
 

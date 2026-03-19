@@ -1,0 +1,32 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="depth" x1="960" y1="0" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#245d74"/>
+      <stop offset="0.46" stop-color="#123f57"/>
+      <stop offset="1" stop-color="#03121f"/>
+    </linearGradient>
+    <radialGradient id="caustic" cx="52%" cy="24%" r="40%">
+      <stop offset="0" stop-color="#91f0ff" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#91f0ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#depth)"/>
+  <ellipse cx="980" cy="250" rx="560" ry="220" fill="url(#caustic)"/>
+
+  <g fill="#0c2a3d" fill-opacity="0.82">
+    <path d="M200 760L420 410L580 760H200Z"/>
+    <path d="M540 760L820 360L1070 760H540Z"/>
+    <path d="M950 760L1240 390L1500 760H950Z"/>
+    <path d="M1360 760L1590 450L1820 760H1360Z"/>
+  </g>
+
+  <g fill="#1f4b62" fill-opacity="0.58">
+    <rect x="310" y="520" width="90" height="260" rx="14"/>
+    <rect x="1520" y="500" width="88" height="280" rx="14"/>
+    <circle cx="960" cy="500" r="140"/>
+    <circle cx="960" cy="500" r="96" fill="#12384d"/>
+  </g>
+
+  <path d="M0 850L420 760L620 1080H0V850Z" fill="#04111d" fill-opacity="0.92"/>
+  <path d="M1920 835L1500 760L1290 1080H1920V835Z" fill="#03101b" fill-opacity="0.9"/>
+</svg>

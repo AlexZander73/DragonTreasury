@@ -4,7 +4,11 @@
   left: 0.95rem;
   width: min(392px, calc(100vw - 1.9rem));
   max-height: calc(100vh - 1.9rem);
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem 1.02rem 1rem;
   pointer-events: auto;
   display: grid;

@@ -1,0 +1,31 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="960" y1="0" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3f627d"/>
+      <stop offset="0.52" stop-color="#243f58"/>
+      <stop offset="1" stop-color="#0a1621"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="66%" cy="20%" r="18%">
+      <stop offset="0" stop-color="#d7ebff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#d7ebff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  <ellipse cx="1280" cy="240" rx="280" ry="170" fill="url(#moon)"/>
+
+  <g fill="#192b3a">
+    <path d="M0 760L280 520L520 760H0Z"/>
+    <path d="M380 760L700 410L980 760H380Z"/>
+    <path d="M760 760L1120 360L1480 760H760Z"/>
+    <path d="M1220 760L1540 470L1920 760H1220Z"/>
+  </g>
+
+  <g fill="#2e455a" fill-opacity="0.72">
+    <path d="M640 520L700 410L760 520H640Z"/>
+    <path d="M1055 440L1120 360L1188 440H1055Z"/>
+    <path d="M1480 540L1540 470L1610 540H1480Z"/>
+  </g>
+
+  <path d="M0 820L430 740L700 1080H0V820Z" fill="#081018" fill-opacity="0.9"/>
+  <path d="M1920 800L1460 730L1260 1080H1920V800Z" fill="#070f17" fill-opacity="0.88"/>
+</svg>

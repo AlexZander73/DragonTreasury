@@ -1,4 +1,5 @@
 import { Container, Sprite, Texture } from 'pixi.js';
+import type { SceneTheme } from '../types/environment';
 import { clamp } from '../utils/math';
 
 type ParticleKind = 'dust' | 'spark' | 'ember' | 'smoke';
@@ -36,6 +37,58 @@ interface SpawnConfig {
   fadeIn?: number;
 }
 
+interface ParticlePalette {
+  sparkleTint: number;
+  smokeTint: number;
+  emberWarm: number;
+  emberHot: number;
+  dustTint: number;
+  topDustTint: number;
+}
+
+const PARTICLE_PALETTES: Record<SceneTheme, ParticlePalette> = {
+  cave: {
+    sparkleTint: 0xffefb2,
+    smokeTint: 0xc2b7ac,
+    emberWarm: 0xffb05c,
+    emberHot: 0xff5b30,
+    dustTint: 0xffebca,
+    topDustTint: 0xd8c5a3,
+  },
+  castle: {
+    sparkleTint: 0xffe7c4,
+    smokeTint: 0xc7c0b8,
+    emberWarm: 0xf8c48b,
+    emberHot: 0xe8834f,
+    dustTint: 0xf3e4cf,
+    topDustTint: 0xcfc1ae,
+  },
+  mountain: {
+    sparkleTint: 0xb8e7ff,
+    smokeTint: 0xaab5c1,
+    emberWarm: 0x9dcfff,
+    emberHot: 0x4d95d3,
+    dustTint: 0xd6e6f0,
+    topDustTint: 0xb8cad9,
+  },
+  forest: {
+    sparkleTint: 0xd8f6ba,
+    smokeTint: 0xafbba9,
+    emberWarm: 0xbbdb8f,
+    emberHot: 0x73b467,
+    dustTint: 0xdce7c8,
+    topDustTint: 0xb9c9a8,
+  },
+  ocean: {
+    sparkleTint: 0x8de9ff,
+    smokeTint: 0x8da4b4,
+    emberWarm: 0x6fd7ff,
+    emberHot: 0x2f98d6,
+    dustTint: 0xafd5e8,
+    topDustTint: 0x8cbfd8,
+  },
+};
+
 const makeRadialTexture = (size: number, inner: string, outer: string): Texture => {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -63,6 +116,7 @@ export class ParticleSystem {
   private pool: Sprite[] = [];
   private maxParticles: number;
   private reducedMotion: boolean;
+  private sceneTheme: SceneTheme = 'cave';
   private spawnAccumulator = 0;
   private topDustAccumulator = 0;
 
@@ -87,7 +141,12 @@ export class ParticleSystem {
     this.maxParticles = maxParticles;
   }
 
+  setSceneTheme(theme: SceneTheme): void {
+    this.sceneTheme = theme;
+  }
+
   emitSparkle(x: number, y: number, intensity = 1): void {
+    const palette = PARTICLE_PALETTES[this.sceneTheme];
     const count = Math.max(1, Math.min(7, Math.round(intensity * 4.5)));
     for (let i = 0; i < count; i += 1) {
       this.spawn({
@@ -97,7 +156,7 @@ export class ParticleSystem {
         vx: (Math.random() - 0.5) * 1.9,
         vy: -Math.random() * 2.4,
         ttl: 0.42 + Math.random() * 0.55,
-        tint: 0xffefb2,
+        tint: palette.sparkleTint,
         alpha: 0.95,
         scale: 1.2 + Math.random() * 2.2,
         fadeIn: 0.08,
@@ -106,6 +165,7 @@ export class ParticleSystem {
   }
 
   emitSmoke(x: number, y: number): void {
+    const palette = PARTICLE_PALETTES[this.sceneTheme];
     const count = this.reducedMotion ? 1 : 3;
     for (let i = 0; i < count; i += 1) {
       this.spawn({
@@ -115,7 +175,7 @@ export class ParticleSystem {
         vx: (Math.random() - 0.5) * 0.23,
         vy: -0.22 - Math.random() * 0.52,
         ttl: 1.25 + Math.random() * 1.1,
-        tint: 0xc2b7ac,
+        tint: palette.smokeTint,
         alpha: 0.22,
         scale: 7.4 + Math.random() * 8.2,
         fadeIn: 0.18,
@@ -124,6 +184,7 @@ export class ParticleSystem {
   }
 
   emitEmber(x: number, y: number): void {
+    const palette = PARTICLE_PALETTES[this.sceneTheme];
     this.spawn({
       kind: 'ember',
       x,
@@ -131,7 +192,7 @@ export class ParticleSystem {
       vx: (Math.random() - 0.5) * 1.1,
       vy: -0.55 - Math.random() * 1.45,
       ttl: 0.66 + Math.random() * 0.7,
-      tint: Math.random() > 0.35 ? 0xffb05c : 0xff5b30,
+      tint: Math.random() > 0.35 ? palette.emberWarm : palette.emberHot,
       alpha: 0.82,
       scale: 1.5 + Math.random() * 1.6,
       fadeIn: 0.06,
@@ -139,6 +200,7 @@ export class ParticleSystem {
   }
 
   update(dt: number, width: number, height: number): void {
+    const palette = PARTICLE_PALETTES[this.sceneTheme];
     if (!this.reducedMotion) {
       this.spawnAccumulator += dt;
       if (this.spawnAccumulator > 0.05) {
@@ -152,7 +214,7 @@ export class ParticleSystem {
           vx: (Math.random() - 0.5) * 0.14,
           vy: -0.05 - Math.random() * 0.15,
           ttl: 4.2 + Math.random() * 4.6,
-          tint: 0xffebca,
+          tint: palette.dustTint,
           alpha: 0.12,
           scale: 1.6 + Math.random() * 2.6,
           fadeIn: 0.22,
@@ -173,7 +235,7 @@ export class ParticleSystem {
           vx: (Math.random() - 0.5) * 0.1,
           vy: 0.1 + Math.random() * 0.18,
           ttl: 2.6 + Math.random() * 1.8,
-          tint: 0xd8c5a3,
+          tint: palette.topDustTint,
           alpha: 0.08,
           scale: 1.2 + Math.random() * 1.8,
           fadeIn: 0.2,

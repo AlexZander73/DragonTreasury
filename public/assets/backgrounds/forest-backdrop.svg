@@ -1,0 +1,32 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="canopy" x1="960" y1="0" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2f4a35"/>
+      <stop offset="0.56" stop-color="#1e3424"/>
+      <stop offset="1" stop-color="#08130b"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="38%" cy="18%" r="20%">
+      <stop offset="0" stop-color="#d0f2bf" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#d0f2bf" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#canopy)"/>
+  <ellipse cx="730" cy="220" rx="280" ry="170" fill="url(#moon)"/>
+
+  <g fill="#17291b" fill-opacity="0.9">
+    <path d="M0 820L190 320L330 820H0Z"/>
+    <path d="M240 820L420 290L560 820H240Z"/>
+    <path d="M510 820L710 300L860 820H510Z"/>
+    <path d="M1460 820L1620 280L1760 820H1460Z"/>
+    <path d="M1660 820L1820 340L1920 820H1660Z"/>
+  </g>
+
+  <g fill="#243b28" fill-opacity="0.8">
+    <ellipse cx="520" cy="500" rx="220" ry="180"/>
+    <ellipse cx="920" cy="450" rx="300" ry="210"/>
+    <ellipse cx="1320" cy="470" rx="280" ry="200"/>
+  </g>
+
+  <path d="M0 900L420 780L680 1080H0V900Z" fill="#070f08" fill-opacity="0.9"/>
+  <path d="M1920 890L1510 770L1230 1080H1920V890Z" fill="#060e07" fill-opacity="0.9"/>
+</svg>

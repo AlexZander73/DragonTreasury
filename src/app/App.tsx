@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadHoardContent } from '../content';
 import { useLocalStorageState } from '../hooks/useLocalStorageState';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
-import type { HoardItem } from '../types/content';
+import { CATEGORIES, RARITIES, type HoardItem } from '../types/content';
 import type { DragonColorTheme } from '../types/dragon';
+import { BGM_TRACKS, SCENE_THEMES, type BgmTrack, type SceneTheme } from '../types/environment';
 import type { ArrangeMode, FilterState } from '../types/filters';
 import { deriveYearRange, filterItems } from '../utils/filterItems';
 import { AccessibilityList } from '../components/AccessibilityList';
@@ -33,6 +34,8 @@ export const App = () => {
   const [motionPreference, setMotionPreference] = useLocalStorageState<boolean>('hoard-reduced-motion', false);
   const [lastArrangeMode, setLastArrangeMode] = useLocalStorageState<ArrangeMode>('hoard-arrange-mode', 'pile');
   const [dragonColorTheme, setDragonColorTheme] = useLocalStorageState<DragonColorTheme>('hoard-dragon-color', 'ember');
+  const [sceneTheme, setSceneTheme] = useLocalStorageState<SceneTheme>('hoard-scene-theme', 'cave');
+  const [bgmTrack, setBgmTrack] = useLocalStorageState<BgmTrack>('hoard-bgm-track', 'scene');
 
   const reducedMotion = motionPreference || systemReducedMotion;
 
@@ -57,6 +60,26 @@ export const App = () => {
     featuredOnly: false,
     tagQuery: '',
   });
+
+  useEffect(() => {
+    if (!SCENE_THEMES.includes(sceneTheme)) {
+      setSceneTheme('cave');
+    }
+    if (!BGM_TRACKS.includes(bgmTrack)) {
+      setBgmTrack('scene');
+    }
+  }, [sceneTheme, bgmTrack, setBgmTrack, setSceneTheme]);
+
+  useEffect(() => {
+    setFilter((current) => {
+      const categories = current.categories.filter((category) => CATEGORIES.includes(category));
+      const rarities = current.rarities.filter((rarity) => RARITIES.includes(rarity));
+      if (categories.length === current.categories.length && rarities.length === current.rarities.length) {
+        return current;
+      }
+      return { ...current, categories, rarities };
+    });
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -195,6 +218,8 @@ export const App = () => {
         reducedMotion={reducedMotion}
         muted={muted}
         dragonColorTheme={dragonColorTheme}
+        sceneTheme={sceneTheme}
+        bgmTrack={bgmTrack}
         quality={quality}
         onSelect={handleSelectFromScene}
         onDragonSecretUnlock={handleDragonSecretUnlock}
@@ -215,6 +240,10 @@ export const App = () => {
             onMutedChange={setMuted}
             reducedMotion={reducedMotion}
             onReducedMotionChange={setMotionPreference}
+            sceneTheme={sceneTheme}
+            onSceneThemeChange={setSceneTheme}
+            bgmTrack={bgmTrack}
+            onBgmTrackChange={setBgmTrack}
             dragonColorTheme={dragonColorTheme}
             onDragonColorThemeChange={setDragonColorTheme}
             featuredMode={featuredMode}

@@ -1,11 +1,27 @@
-# Cave Background Layers
+# Background Layers
 
-Runtime uses these layers as optional sprite overlays:
+Runtime scenes share a common lighting stack (`cave-color-grade.svg`, `cave-vignette.svg`, `torch-light.svg`, `foreground-mist.svg`)
+and swap scene-specific geography layers:
 
-- `cave-backdrop.svg` (far cave)
-- `cave-midground.svg` (depth/mound tint)
-- `cave-fog.svg` (soft atmospheric haze)
-- `cave-color-grade.svg` (warm + teal grading pass)
-- `cave-vignette.svg` (edge darkening and focus)
-- `torch-light.svg` (dynamic moving light bloom)
-- `foreground-mist.svg` (near-camera depth mist)
+- Cave:
+  - `cave-backdrop.svg`
+  - `cave-midground.svg`
+  - `cave-fog.svg`
+- Castle:
+  - `castle-backdrop.svg`
+  - `castle-midground.svg`
+  - `castle-fog.svg`
+- Mountain:
+  - `mountain-backdrop.svg`
+  - `mountain-midground.svg`
+  - `mountain-fog.svg`
+- Forest:
+  - `forest-backdrop.svg`
+  - `forest-midground.svg`
+  - `forest-fog.svg`
+- Ocean:
+  - `ocean-backdrop.svg`
+  - `ocean-midground.svg`
+  - `ocean-fog.svg`
+
+These files are safe to replace with painted assets if dimensions remain 1920x1080.

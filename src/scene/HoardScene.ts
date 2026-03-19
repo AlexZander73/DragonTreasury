@@ -2,6 +2,7 @@ import { Application, Container, FederatedPointerEvent, Graphics, Sprite } from 
 import gsap from 'gsap';
 import type { Body } from 'matter-js';
 import type { HoardItem } from '../types/content';
+import type { BgmTrack, SceneTheme } from '../types/environment';
 import type { ArrangeMode } from '../types/filters';
 import type { HoardSceneOptions } from '../types/scene';
 import { AudioManager } from '../audio/AudioManager';
@@ -33,12 +34,136 @@ interface DragState {
   moved: boolean;
 }
 
+interface SceneVisualStyle {
+  hazeColor: number;
+  hazeAlpha: number;
+  edgeShadeColor: number;
+  edgeShadeAlpha: number;
+  wallGlowMain: number;
+  wallGlowSecondary: number;
+  warmthColor: number;
+  warmthAlpha: number;
+  torchAlpha: number;
+  fogAlpha: number;
+  vignetteAlpha: number;
+  groundFogColor: number;
+}
+
+interface SceneVisualAssets {
+  backdrop: string;
+  midground: string;
+  fog: string;
+}
+
+const SCENE_VISUAL_STYLES: Record<SceneTheme, SceneVisualStyle> = {
+  cave: {
+    hazeColor: 0x070507,
+    hazeAlpha: 0.8,
+    edgeShadeColor: 0x040304,
+    edgeShadeAlpha: 0.52,
+    wallGlowMain: 0x5f3f24,
+    wallGlowSecondary: 0x302119,
+    warmthColor: 0xd58e4e,
+    warmthAlpha: 0.38,
+    torchAlpha: 0.54,
+    fogAlpha: 0.6,
+    vignetteAlpha: 0.56,
+    groundFogColor: 0x8f6748,
+  },
+  castle: {
+    hazeColor: 0x07080b,
+    hazeAlpha: 0.77,
+    edgeShadeColor: 0x030408,
+    edgeShadeAlpha: 0.56,
+    wallGlowMain: 0x6d5a45,
+    wallGlowSecondary: 0x303746,
+    warmthColor: 0xbda07b,
+    warmthAlpha: 0.31,
+    torchAlpha: 0.42,
+    fogAlpha: 0.46,
+    vignetteAlpha: 0.62,
+    groundFogColor: 0xa58a64,
+  },
+  mountain: {
+    hazeColor: 0x07090f,
+    hazeAlpha: 0.72,
+    edgeShadeColor: 0x020407,
+    edgeShadeAlpha: 0.54,
+    wallGlowMain: 0x4e6170,
+    wallGlowSecondary: 0x243a48,
+    warmthColor: 0x8ca8c4,
+    warmthAlpha: 0.2,
+    torchAlpha: 0.34,
+    fogAlpha: 0.52,
+    vignetteAlpha: 0.64,
+    groundFogColor: 0x6d90af,
+  },
+  forest: {
+    hazeColor: 0x060806,
+    hazeAlpha: 0.76,
+    edgeShadeColor: 0x030503,
+    edgeShadeAlpha: 0.5,
+    wallGlowMain: 0x496043,
+    wallGlowSecondary: 0x294130,
+    warmthColor: 0x83ae6c,
+    warmthAlpha: 0.27,
+    torchAlpha: 0.37,
+    fogAlpha: 0.58,
+    vignetteAlpha: 0.54,
+    groundFogColor: 0x73905c,
+  },
+  ocean: {
+    hazeColor: 0x04080b,
+    hazeAlpha: 0.82,
+    edgeShadeColor: 0x010407,
+    edgeShadeAlpha: 0.58,
+    wallGlowMain: 0x2b6b75,
+    wallGlowSecondary: 0x1d3c4e,
+    warmthColor: 0x3f9fba,
+    warmthAlpha: 0.24,
+    torchAlpha: 0.3,
+    fogAlpha: 0.66,
+    vignetteAlpha: 0.68,
+    groundFogColor: 0x4f9ac4,
+  },
+};
+
+const SCENE_VISUAL_ASSETS: Record<SceneTheme, SceneVisualAssets> = {
+  cave: {
+    backdrop: '/assets/backgrounds/cave-backdrop.svg',
+    midground: '/assets/backgrounds/cave-midground.svg',
+    fog: '/assets/backgrounds/cave-fog.svg',
+  },
+  castle: {
+    backdrop: '/assets/backgrounds/castle-backdrop.svg',
+    midground: '/assets/backgrounds/castle-midground.svg',
+    fog: '/assets/backgrounds/castle-fog.svg',
+  },
+  mountain: {
+    backdrop: '/assets/backgrounds/mountain-backdrop.svg',
+    midground: '/assets/backgrounds/mountain-midground.svg',
+    fog: '/assets/backgrounds/mountain-fog.svg',
+  },
+  forest: {
+    backdrop: '/assets/backgrounds/forest-backdrop.svg',
+    midground: '/assets/backgrounds/forest-midground.svg',
+    fog: '/assets/backgrounds/forest-fog.svg',
+  },
+  ocean: {
+    backdrop: '/assets/backgrounds/ocean-backdrop.svg',
+    midground: '/assets/backgrounds/ocean-midground.svg',
+    fog: '/assets/backgrounds/ocean-fog.svg',
+  },
+};
+
 export class HoardScene {
   private readonly host: HTMLDivElement;
   private readonly callbacks: HoardSceneOptions['callbacks'];
   private reducedMotion: boolean;
   private muted: boolean;
   private dragonColorTheme: DragonColorTheme;
+  private sceneTheme: SceneTheme;
+  private bgmTrack: BgmTrack;
 
   private app: Application | null = null;
   private physics: HoardPhysics | null = null;
@@ -82,6 +207,8 @@ export class HoardScene {
     this.reducedMotion = options.reducedMotion;
     this.muted = options.muted;
     this.dragonColorTheme = options.dragonColorTheme;
+    this.sceneTheme = options.sceneTheme;
+    this.bgmTrack = options.bgmTrack;
 
     this.audio = new AudioManager(options.muted);
     this.particles = new ParticleSystem({
@@ -122,7 +249,10 @@ export class HoardScene {
     this.treasureLayer.sortableChildren = true;
 
     this.drawBackground();
+    this.particles.setSceneTheme(this.sceneTheme);
     this.fxLayer.addChild(this.particles.container);
+    this.audio.setSceneTheme(this.sceneTheme);
+    this.audio.setMusicTrack(this.bgmTrack);
 
     this.physics = new HoardPhysics(this.host.clientWidth, this.host.clientHeight);
     this.physics.setCollisionListener(({ relativeVelocity }) => {
@@ -199,6 +329,21 @@ export class HoardScene {
   setDragonColorTheme(theme: DragonColorTheme): void {
     this.dragonColorTheme = theme;
     this.dragon?.setColorTheme(theme);
+  }
+
+  setSceneTheme(theme: SceneTheme): void {
+    if (this.sceneTheme === theme) {
+      return;
+    }
+    this.sceneTheme = theme;
+    this.audio.setSceneTheme(theme);
+    this.particles.setSceneTheme(theme);
+    this.drawBackground();
+  }
+
+  setBgmTrack(track: BgmTrack): void {
+    this.bgmTrack = track;
+    this.audio.setMusicTrack(track);
   }
 
   setReducedMotion(value: boolean): void {
@@ -506,12 +651,13 @@ export class HoardScene {
     this.dragonLayer.y = parallaxY * -8 + driftY * 0.25;
 
     if (this.torchLight) {
+      const style = SCENE_VISUAL_STYLES[this.sceneTheme];
       const targetX = this.host.clientWidth * (0.36 + this.pointerNormX * 0.34);
       const targetY = this.host.clientHeight * (0.32 + this.pointerNormY * 0.22);
       this.torchLight.x = lerp(this.torchLight.x, targetX, 0.06);
       this.torchLight.y = lerp(this.torchLight.y, targetY, 0.06);
       const pulse = this.reducedMotion ? 0.9 : 0.85 + Math.sin(this.drift * 2.6) * 0.08;
-      this.torchLight.alpha = 0.52 * pulse;
+      this.torchLight.alpha = style.torchAlpha * pulse;
     }
 
     if (this.foregroundMist) {
@@ -522,8 +668,9 @@ export class HoardScene {
     }
 
     if (this.hoardWarmth) {
+      const style = SCENE_VISUAL_STYLES[this.sceneTheme];
       const warmthPulse = this.reducedMotion ? 0.9 : 0.84 + Math.sin(this.drift * 1.15) * 0.11;
-      this.hoardWarmth.alpha = 0.42 * warmthPulse;
+      this.hoardWarmth.alpha = style.warmthAlpha * warmthPulse;
     }
 
     if (this.edgeVeil) {
@@ -541,11 +688,13 @@ export class HoardScene {
 
     const w = this.host.clientWidth;
     const h = this.host.clientHeight;
+    const style = SCENE_VISUAL_STYLES[this.sceneTheme];
+    const assets = SCENE_VISUAL_ASSETS[this.sceneTheme];
 
     const haze = new Graphics();
-    haze.rect(0, 0, w, h).fill({ color: 0x070507, alpha: 0.8 });
+    haze.rect(0, 0, w, h).fill({ color: style.hazeColor, alpha: style.hazeAlpha });
 
-    const backdrop = Sprite.from(withBase('/assets/backgrounds/cave-backdrop.svg'));
+    const backdrop = Sprite.from(withBase(assets.backdrop));
     backdrop.width = w;
     backdrop.height = h;
     backdrop.alpha = 0.86;
@@ -556,12 +705,12 @@ export class HoardScene {
     colorGrade.alpha = 0.8;
 
     const edgeShadow = new Graphics();
-    edgeShadow.rect(0, 0, w, h).fill({ color: 0x040304, alpha: 0.52 });
+    edgeShadow.rect(0, 0, w, h).fill({ color: style.edgeShadeColor, alpha: style.edgeShadeAlpha });
     edgeShadow.ellipse(w * 0.5, h * 0.55, w * 0.46, h * 0.34).fill({ color: 0x000000, alpha: 0.14 });
 
     const wallGlow = new Graphics();
-    wallGlow.ellipse(w * 0.5, h * 0.33, w * 0.42, h * 0.28).fill({ color: 0x5f3f24, alpha: 0.36 });
-    wallGlow.ellipse(w * 0.25, h * 0.48, w * 0.23, h * 0.2).fill({ color: 0x302119, alpha: 0.44 });
+    wallGlow.ellipse(w * 0.5, h * 0.33, w * 0.42, h * 0.28).fill({ color: style.wallGlowMain, alpha: 0.36 });
+    wallGlow.ellipse(w * 0.25, h * 0.48, w * 0.23, h * 0.2).fill({ color: style.wallGlowSecondary, alpha: 0.44 });
     wallGlow.ellipse(w * 0.76, h * 0.44, w * 0.2, h * 0.17).fill({ color: 0x3a2a22, alpha: 0.36 });
     wallGlow.ellipse(w * 0.56, h * 0.62, w * 0.26, h * 0.1).fill({ color: 0x3f2a1b, alpha: 0.22 });
 
@@ -582,30 +731,30 @@ export class HoardScene {
       .fill({ color: 0x060408, alpha: 0.62 });
 
     const fog = new Graphics();
-    fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: 0x8f6748, alpha: 0.15 });
+    fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: style.groundFogColor, alpha: 0.15 });
 
-    const midground = Sprite.from(withBase('/assets/backgrounds/cave-midground.svg'));
+    const midground = Sprite.from(withBase(assets.midground));
     midground.width = w;
     midground.height = h;
     midground.alpha = 0.78;
 
-    const fogOverlay = Sprite.from(withBase('/assets/backgrounds/cave-fog.svg'));
+    const fogOverlay = Sprite.from(withBase(assets.fog));
     fogOverlay.width = w;
     fogOverlay.height = h;
-    fogOverlay.alpha = 0.6;
+    fogOverlay.alpha = style.fogAlpha;
 
     const vignetteOverlay = Sprite.from(withBase('/assets/backgrounds/cave-vignette.svg'));
     vignetteOverlay.width = w;
     vignetteOverlay.height = h;
-    vignetteOverlay.alpha = 0.56;
+    vignetteOverlay.alpha = style.vignetteAlpha;
 
     const mound = new Graphics();
     mound.ellipse(w * 0.5, h * 0.88, w * 0.46, h * 0.18).fill({ color: 0x1f1714, alpha: 0.9 });
     mound.ellipse(w * 0.5, h * 0.9, w * 0.37, h * 0.12).fill({ color: 0x3a291c, alpha: 0.4 });
 
     this.hoardWarmth = new Graphics();
-    this.hoardWarmth.ellipse(w * 0.5, h * 0.74, w * 0.28, h * 0.14).fill({ color: 0xd58e4e, alpha: 0.38 });
-    this.hoardWarmth.ellipse(w * 0.52, h * 0.8, w * 0.22, h * 0.09).fill({ color: 0xa15f2f, alpha: 0.28 });
+    this.hoardWarmth.ellipse(w * 0.5, h * 0.74, w * 0.28, h * 0.14).fill({ color: style.warmthColor, alpha: style.warmthAlpha });
+    this.hoardWarmth.ellipse(w * 0.52, h * 0.8, w * 0.22, h * 0.09).fill({ color: style.warmthColor, alpha: style.warmthAlpha * 0.72 });
     this.hoardWarmth.blendMode = 'add';
 
     this.bgLayer.addChild(haze, backdrop, colorGrade, edgeShadow, wallGlow, farRocks, pillarOcclusion);
@@ -616,7 +765,7 @@ export class HoardScene {
     this.torchLight.width = w * 0.74;
     this.torchLight.height = h * 0.62;
     this.torchLight.position.set(w * 0.5, h * 0.36);
-    this.torchLight.alpha = 0.54;
+    this.torchLight.alpha = style.torchAlpha;
     this.torchLight.blendMode = 'add';
 
     this.foregroundMist = Sprite.from(withBase('/assets/backgrounds/foreground-mist.svg'));
