@@ -1,4 +1,5 @@
 import { CATEGORIES, RARITIES, type Category, type Rarity } from '../types/content';
+import { DRAGON_COLOR_THEME_LABELS, DRAGON_COLOR_THEMES, type DragonColorTheme } from '../types/dragon';
 import type { ArrangeMode, FilterState } from '../types/filters';
 
 interface OverlayControlsProps {
@@ -10,6 +11,8 @@ interface OverlayControlsProps {
   onMutedChange: (value: boolean) => void;
   reducedMotion: boolean;
   onReducedMotionChange: (value: boolean) => void;
+  dragonColorTheme: DragonColorTheme;
+  onDragonColorThemeChange: (value: DragonColorTheme) => void;
   featuredMode: boolean;
   onFeaturedModeChange: (value: boolean) => void;
   cleanMode: boolean;
@@ -39,6 +42,8 @@ export const OverlayControls = ({
   onMutedChange,
   reducedMotion,
   onReducedMotionChange,
+  dragonColorTheme,
+  onDragonColorThemeChange,
   featuredMode,
   onFeaturedModeChange,
   cleanMode,
@@ -170,6 +175,21 @@ export const OverlayControls = ({
           <option value="timeline">By timeline</option>
           <option value="category">By category</option>
           <option value="era">By era</option>
+        </select>
+      </div>
+
+      <div className="controls-row">
+        <label htmlFor="dragonColorTheme">Dragon Palette</label>
+        <select
+          id="dragonColorTheme"
+          value={dragonColorTheme}
+          onChange={(event) => onDragonColorThemeChange(event.target.value as DragonColorTheme)}
+        >
+          {DRAGON_COLOR_THEMES.map((theme) => (
+            <option key={theme} value={theme}>
+              {DRAGON_COLOR_THEME_LABELS[theme]}
+            </option>
+          ))}
         </select>
       </div>
 

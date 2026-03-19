@@ -7,6 +7,7 @@ import type { HoardSceneOptions } from '../types/scene';
 import { AudioManager } from '../audio/AudioManager';
 import { PHYSICS_LIMITS } from '../physics/physicsConfig';
 import { HoardPhysics } from '../physics/HoardPhysics';
+import type { DragonColorTheme } from '../types/dragon';
 import { withBase } from '../utils/basePath';
 import { clamp, lerp } from '../utils/math';
 import { rarityWeight } from '../utils/rarityStyles';
@@ -37,6 +38,7 @@ export class HoardScene {
   private readonly callbacks: HoardSceneOptions['callbacks'];
   private reducedMotion: boolean;
   private muted: boolean;
+  private dragonColorTheme: DragonColorTheme;
 
   private app: Application | null = null;
   private physics: HoardPhysics | null = null;
@@ -79,6 +81,7 @@ export class HoardScene {
     this.callbacks = options.callbacks;
     this.reducedMotion = options.reducedMotion;
     this.muted = options.muted;
+    this.dragonColorTheme = options.dragonColorTheme;
 
     this.audio = new AudioManager(options.muted);
     this.particles = new ParticleSystem({
@@ -146,6 +149,7 @@ export class HoardScene {
         onClickCount: (count) => this.callbacks.onDragonClick?.(count),
       },
       this.reducedMotion,
+      this.dragonColorTheme,
     );
     this.dragonLayer.addChild(this.dragon.container);
 
@@ -190,6 +194,11 @@ export class HoardScene {
   setMuted(muted: boolean): void {
     this.muted = muted;
     this.audio.setMuted(muted);
+  }
+
+  setDragonColorTheme(theme: DragonColorTheme): void {
+    this.dragonColorTheme = theme;
+    this.dragon?.setColorTheme(theme);
   }
 
   setReducedMotion(value: boolean): void {

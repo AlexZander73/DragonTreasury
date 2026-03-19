@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type { HoardItem } from '../types/content';
+import type { DragonColorTheme } from '../types/dragon';
 import type { ArrangeMode } from '../types/filters';
 import { HoardScene } from '../scene/HoardScene';
 import { preloadAtlasTextures } from '../scene/atlasTextures';
@@ -18,6 +19,7 @@ interface HoardCanvasProps {
   featuredMode: boolean;
   reducedMotion: boolean;
   muted: boolean;
+  dragonColorTheme: DragonColorTheme;
   quality: {
     maxParticles: number;
   };
@@ -36,6 +38,7 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
     featuredMode,
     reducedMotion,
     muted,
+    dragonColorTheme,
     quality,
     onSelect,
     onDragonSecretUnlock,
@@ -73,6 +76,7 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
       items,
       reducedMotion,
       muted,
+      dragonColorTheme,
       quality: {
         maxParticles: quality.maxParticles,
         dragonDetail: 'full',
@@ -140,6 +144,10 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
   useEffect(() => {
     sceneRef.current?.setMuted(muted);
   }, [muted]);
+
+  useEffect(() => {
+    sceneRef.current?.setDragonColorTheme(dragonColorTheme);
+  }, [dragonColorTheme]);
 
   useEffect(() => {
     sceneRef.current?.setReducedMotion(reducedMotion);

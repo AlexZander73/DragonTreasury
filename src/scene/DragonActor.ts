@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import gsap from 'gsap';
+import type { DragonColorTheme } from '../types/dragon';
 import { clamp, lerp } from '../utils/math';
 import type { DragonAtlasFrameKey } from './atlasData';
 import { getDragonAtlasTexture } from './atlasTextures';
@@ -14,6 +15,94 @@ interface DragonCallbacks {
   onSecretUnlock: () => void;
   onClickCount?: (count: number) => void;
 }
+
+interface DragonColorStyle {
+  body: number;
+  head: number;
+  wing: number;
+  tail: number;
+  scales: number;
+  spines: number;
+  horns: number;
+  jaw: number;
+  glow: number;
+  eyes: number;
+  aura: number;
+  rim: number;
+}
+
+const DRAGON_COLOR_STYLES: Record<DragonColorTheme, DragonColorStyle> = {
+  ember: {
+    body: 0xffffff,
+    head: 0xffffff,
+    wing: 0xffffff,
+    tail: 0xffffff,
+    scales: 0xf6e0c0,
+    spines: 0xeec9a5,
+    horns: 0xffe0b8,
+    jaw: 0xf4d9b8,
+    glow: 0xf6b26c,
+    eyes: 0xffcf73,
+    aura: 0xffbf66,
+    rim: 0xffdb98,
+  },
+  verdant: {
+    body: 0xbfd8b2,
+    head: 0xc7e1b9,
+    wing: 0x9eb596,
+    tail: 0xa6be9d,
+    scales: 0xe0f1c8,
+    spines: 0xd4e6bf,
+    horns: 0xefe1c6,
+    jaw: 0xd6e6c7,
+    glow: 0x86cf7b,
+    eyes: 0xd4ff8f,
+    aura: 0x8de88c,
+    rim: 0xc7ebb2,
+  },
+  sapphire: {
+    body: 0xb7c9ea,
+    head: 0xc6d6f3,
+    wing: 0x8fa8d4,
+    tail: 0x9bb3de,
+    scales: 0xd9e6ff,
+    spines: 0xcfdcf5,
+    horns: 0xf0ead9,
+    jaw: 0xd1ddf1,
+    glow: 0x84b8ef,
+    eyes: 0xc8e5ff,
+    aura: 0x90cdf8,
+    rim: 0xb6d5ff,
+  },
+  amethyst: {
+    body: 0xd2bbe6,
+    head: 0xddc8ef,
+    wing: 0xb293cd,
+    tail: 0xb89ad3,
+    scales: 0xecddfa,
+    spines: 0xe3d1f4,
+    horns: 0xf0e6dd,
+    jaw: 0xdccbe9,
+    glow: 0xc188ec,
+    eyes: 0xf2d9ff,
+    aura: 0xd4a5f1,
+    rim: 0xe0b9ff,
+  },
+  obsidian: {
+    body: 0xb7b0ba,
+    head: 0xc7c0ca,
+    wing: 0x8f8894,
+    tail: 0x94909b,
+    scales: 0xd6d0da,
+    spines: 0xc7bfcc,
+    horns: 0xd8cfbf,
+    jaw: 0xbbb5bf,
+    glow: 0xc99f78,
+    eyes: 0xffc98a,
+    aura: 0xe2b486,
+    rim: 0xdbd1c6,
+  },
+};
 
 export class DragonActor {
   readonly container = new Container();
@@ -61,14 +150,16 @@ export class DragonActor {
   private rareTimer = 0;
   private huffCooldown = 0;
   private clickCount = 0;
+  private colorTheme: DragonColorTheme;
 
   private baseX = 0;
   private baseY = 0;
   private jawBaseRotation = 0.05;
 
-  constructor(callbacks: DragonCallbacks, reducedMotion: boolean) {
+  constructor(callbacks: DragonCallbacks, reducedMotion: boolean, colorTheme: DragonColorTheme) {
     this.callbacks = callbacks;
     this.reducedMotion = reducedMotion;
+    this.colorTheme = colorTheme;
 
     this.container.sortableChildren = true;
     this.container.eventMode = 'static';
@@ -94,6 +185,7 @@ export class DragonActor {
     });
 
     this.draw();
+    this.setColorTheme(colorTheme);
     this.startIdleAnimations();
   }
 
@@ -114,6 +206,58 @@ export class DragonActor {
     this.baseX = x;
     this.baseY = y;
     this.container.position.set(x, y);
+  }
+
+  setColorTheme(theme: DragonColorTheme): void {
+    this.colorTheme = theme;
+    const style = DRAGON_COLOR_STYLES[theme];
+
+    if (this.bodySprite) {
+      this.bodySprite.tint = style.body;
+    }
+    if (this.headSprite) {
+      this.headSprite.tint = style.head;
+    }
+    if (this.wingSprite) {
+      this.wingSprite.tint = style.wing;
+    }
+    if (this.tailSprite) {
+      this.tailSprite.tint = style.tail;
+    }
+    if (this.scalesSprite) {
+      this.scalesSprite.tint = style.scales;
+    }
+    if (this.spinesSprite) {
+      this.spinesSprite.tint = style.spines;
+    }
+    if (this.hornLeftSprite) {
+      this.hornLeftSprite.tint = style.horns;
+    }
+    if (this.hornRightSprite) {
+      this.hornRightSprite.tint = style.horns;
+    }
+    if (this.jawSprite) {
+      this.jawSprite.tint = style.jaw;
+    }
+    if (this.glowSprite) {
+      this.glowSprite.tint = style.glow;
+    }
+    if (this.eyeLeftCore) {
+      this.eyeLeftCore.tint = style.eyes;
+    }
+    if (this.eyeRightCore) {
+      this.eyeRightCore.tint = style.eyes;
+    }
+    if (this.eyeAuraLeft) {
+      this.eyeAuraLeft.tint = style.aura;
+    }
+    if (this.eyeAuraRight) {
+      this.eyeAuraRight.tint = style.aura;
+    }
+    this.chestGlow.tint = style.glow;
+    this.rimLight.tint = style.rim;
+    this.clawLeft.tint = style.horns;
+    this.clawRight.tint = style.horns;
   }
 
   reactToDisturbance(strength: number): void {

@@ -3,6 +3,7 @@ import { loadHoardContent } from '../content';
 import { useLocalStorageState } from '../hooks/useLocalStorageState';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import type { HoardItem } from '../types/content';
+import type { DragonColorTheme } from '../types/dragon';
 import type { ArrangeMode, FilterState } from '../types/filters';
 import { deriveYearRange, filterItems } from '../utils/filterItems';
 import { AccessibilityList } from '../components/AccessibilityList';
@@ -31,6 +32,7 @@ export const App = () => {
   const [muted, setMuted] = useLocalStorageState<boolean>('hoard-muted', true);
   const [motionPreference, setMotionPreference] = useLocalStorageState<boolean>('hoard-reduced-motion', false);
   const [lastArrangeMode, setLastArrangeMode] = useLocalStorageState<ArrangeMode>('hoard-arrange-mode', 'pile');
+  const [dragonColorTheme, setDragonColorTheme] = useLocalStorageState<DragonColorTheme>('hoard-dragon-color', 'ember');
 
   const reducedMotion = motionPreference || systemReducedMotion;
 
@@ -192,6 +194,7 @@ export const App = () => {
         featuredMode={featuredMode}
         reducedMotion={reducedMotion}
         muted={muted}
+        dragonColorTheme={dragonColorTheme}
         quality={quality}
         onSelect={handleSelectFromScene}
         onDragonSecretUnlock={handleDragonSecretUnlock}
@@ -212,6 +215,8 @@ export const App = () => {
             onMutedChange={setMuted}
             reducedMotion={reducedMotion}
             onReducedMotionChange={setMotionPreference}
+            dragonColorTheme={dragonColorTheme}
+            onDragonColorThemeChange={setDragonColorTheme}
             featuredMode={featuredMode}
             onFeaturedModeChange={setFeaturedMode}
             cleanMode={cleanMode}

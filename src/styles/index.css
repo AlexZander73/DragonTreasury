@@ -100,7 +100,6 @@ summary {
     inset 0 18px 28px rgba(255, 216, 166, 0.03);
   backdrop-filter: blur(8px) saturate(108%);
   position: relative;
-  overflow: hidden;
 }
 
 .panel::before,
@@ -110,6 +109,7 @@ summary {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   pointer-events: none;
   background:
     radial-gradient(circle at 14% 8%, rgba(255, 232, 189, 0.14), transparent 42%),
