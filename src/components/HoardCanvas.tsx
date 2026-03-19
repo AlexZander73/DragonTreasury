@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type { HoardItem } from '../types/content';
 import type { ArrangeMode } from '../types/filters';
 import { HoardScene } from '../scene/HoardScene';
+import { preloadAtlasTextures } from '../scene/atlasTextures';
 
 export interface HoardCanvasHandle {
   resetPile: () => void;
@@ -81,8 +82,8 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
 
     sceneRef.current = scene;
 
-    scene
-      .init(items)
+    preloadAtlasTextures()
+      .then(() => scene.init(items))
       .then(() => {
         if (cancelled) {
           return;
@@ -91,6 +92,9 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
       })
       .catch((error) => {
         console.error('Failed to initialize scene', error);
+        if (!cancelled) {
+          onLoaded();
+        }
       });
 
     return () => {
