@@ -46,6 +46,10 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
 ) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<HoardScene | null>(null);
+  const sceneReadyRef = useRef(false);
+  const latestItemsRef = useRef<HoardItem[]>(items);
+
+  latestItemsRef.current = items;
 
   useImperativeHandle(
     ref,
@@ -63,6 +67,7 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
     }
 
     let cancelled = false;
+    sceneReadyRef.current = false;
     const scene = new HoardScene({
       host: hostRef.current,
       items,
@@ -88,6 +93,8 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
         if (cancelled) {
           return;
         }
+        sceneReadyRef.current = true;
+        scene.setItems(latestItemsRef.current);
         onLoaded();
       })
       .catch((error) => {
@@ -99,6 +106,7 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
 
     return () => {
       cancelled = true;
+      sceneReadyRef.current = false;
       sceneRef.current?.destroy();
       sceneRef.current = null;
     };
@@ -107,6 +115,9 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
   }, []);
 
   useEffect(() => {
+    if (!sceneReadyRef.current) {
+      return;
+    }
     sceneRef.current?.setItems(items);
   }, [items]);
 
