@@ -74,6 +74,8 @@ public/assets/
   ui/
   audio/
   docs/
+scripts/
+  generate_painted_atlases.py
 ```
 
 ## Content System
@@ -86,7 +88,7 @@ Current seed includes:
 
 - A curated sample archive
 - Real catalog entries from your provided `Products` and `Projects` lists
-- Additional generated placeholders for interaction/scale testing
+- Supplemental seed entries for interaction/scale testing
 
 Key schema (`HoardItem`) includes:
 
@@ -189,9 +191,14 @@ Target range is approximately 40–100 physics items with graceful behavior.
 - Read `public/assets/docs/asset-spec.md`
 - Dragon layer guide: `public/assets/dragon/dragon-layer-guide.txt`
 - Treasure sheet naming: `public/assets/treasure/treasure-sheet-guide.txt`
-- First-pass runtime sprites are already wired from `public/assets/backgrounds/*.svg`, `public/assets/dragon/*.svg`, and `public/assets/treasure/*.svg`.
+- Runtime dragon + treasure visuals are atlas-driven from `public/assets/atlases/*.png|*.webp` (frame metadata in `*.json`).
+- Regenerate current painted atlas set with:
 
-Current visuals use maintainable vector fallback rendering so the app remains functional before final art is available.
+```bash
+python3 scripts/generate_painted_atlases.py
+```
+
+The rig and physics layer contracts stay stable as long as frame keys and dimensions remain consistent.
 
 ## Notes on Static Compatibility
 
@@ -204,7 +211,7 @@ Current visuals use maintainable vector fallback rendering so the app remains fu
 
 ## Future Extensions
 
-- Replace vector placeholders with curated hand-painted assets
+- Swap generated atlases with fully hand-painted production atlases
 - Optional sprite sheets for richer dragon animation cycles
 - Build-time importer from external JSON sources
 - Save user-created display presets (filter + arrange mode)

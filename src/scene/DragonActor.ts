@@ -22,16 +22,28 @@ export class DragonActor {
   private readonly neckSpines = new Graphics();
   private readonly rimLight = new Graphics();
   private readonly chestGlow = new Graphics();
+  private readonly throatShadow = new Graphics();
+  private readonly bellyPlates = new Graphics();
   private readonly head = new Graphics();
   private readonly eyeLeft = new Graphics();
   private readonly eyeRight = new Graphics();
   private readonly tail = new Graphics();
   private readonly wing = new Graphics();
+  private readonly clawLeft = new Graphics();
+  private readonly clawRight = new Graphics();
 
   private jawSprite: Sprite | null = null;
   private hornLeftSprite: Sprite | null = null;
   private hornRightSprite: Sprite | null = null;
   private glowSprite: Sprite | null = null;
+  private bodySprite: Sprite | null = null;
+  private headSprite: Sprite | null = null;
+  private tailSprite: Sprite | null = null;
+  private wingSprite: Sprite | null = null;
+  private scalesSprite: Sprite | null = null;
+  private spinesSprite: Sprite | null = null;
+  private eyeLeftCore: Sprite | null = null;
+  private eyeRightCore: Sprite | null = null;
   private eyeAuraLeft: Graphics | null = null;
   private eyeAuraRight: Graphics | null = null;
 
@@ -216,6 +228,8 @@ export class DragonActor {
     this.huffCooldown = Math.max(0, this.huffCooldown - dt);
 
     const now = performance.now() * 0.001;
+    const breathe = Math.sin(now * 1.18);
+    const hover = Math.sin(now * 0.62);
 
     if (!this.reducedMotion) {
       const headTargetX = lerp(-0.1, 0.1, pointerNormX);
@@ -229,9 +243,53 @@ export class DragonActor {
       this.bodyScales.y = Math.sin(now * 1.1) * 1.6;
     }
 
+    if (this.bodySprite) {
+      this.bodySprite.y = breathe * 1.6 + hover * 0.8;
+      this.bodySprite.scale.y = 1 + breathe * 0.014;
+    }
+    if (this.scalesSprite) {
+      this.scalesSprite.y = 0.6 + breathe * 1.2;
+      this.scalesSprite.alpha = 0.68 + (this.reducedMotion ? 0 : Math.sin(now * 1.7) * 0.06);
+    }
+    if (this.tailSprite) {
+      this.tailSprite.rotation = (this.reducedMotion ? 0.01 : Math.sin(now * 1.06) * 0.14) + Math.sin(now * 2.6) * 0.03;
+      this.tailSprite.y = hover * 2.4;
+    }
+    if (this.wingSprite) {
+      this.wingSprite.rotation = this.reducedMotion ? -0.02 : Math.sin(now * 0.74) * 0.09 - 0.03;
+      this.wingSprite.scale.y = 1 + (this.reducedMotion ? 0 : Math.sin(now * 0.8) * 0.02);
+    }
+    if (this.spinesSprite) {
+      this.spinesSprite.rotation = this.reducedMotion ? 0 : Math.sin(now * 0.92) * 0.05;
+    }
+    if (this.headSprite) {
+      this.headSprite.y = this.reducedMotion ? 0 : Math.sin(now * 1.12) * 1.4;
+    }
+    if (this.hornLeftSprite && this.hornRightSprite && !this.reducedMotion) {
+      const hornWave = Math.sin(now * 0.9) * 0.04;
+      this.hornLeftSprite.rotation = hornWave;
+      this.hornRightSprite.rotation = -0.06 - hornWave * 0.7;
+    }
+    if (this.glowSprite) {
+      const glowPulse = this.reducedMotion ? 0.94 : 0.86 + Math.sin(now * 2.35) * 0.1;
+      this.glowSprite.alpha = 0.32 * glowPulse;
+      this.glowSprite.scale.set(1 + (glowPulse - 0.9) * 0.18, 1 + (glowPulse - 0.9) * 0.14);
+    }
+
     if (this.jawSprite) {
       const jawPulse = this.reducedMotion ? 0 : Math.sin(now * 1.4) * 0.018;
       this.jawSprite.rotation = this.jawBaseRotation + jawPulse;
+    }
+
+    const eyeOffsetX = this.reducedMotion ? 0 : lerp(-1.2, 1.2, pointerNormX);
+    const eyeOffsetY = this.reducedMotion ? 0 : lerp(-0.8, 0.9, pointerNormY);
+    if (this.eyeLeftCore) {
+      this.eyeLeftCore.x = 88 + eyeOffsetX;
+      this.eyeLeftCore.y = -84 + eyeOffsetY;
+    }
+    if (this.eyeRightCore) {
+      this.eyeRightCore.x = 108 + eyeOffsetX * 0.85;
+      this.eyeRightCore.y = -82 + eyeOffsetY * 0.85;
     }
 
     const eyeFlicker = 0.38 + Math.sin(now * 5.2) * 0.08;
@@ -290,40 +348,64 @@ export class DragonActor {
 
   private draw(): void {
     this.body.clear();
-    this.body.ellipse(0, 0, 154, 98).fill({ color: 0x2c2428, alpha: 0.98 });
-    this.body.ellipse(6, 20, 138, 72).fill({ color: 0x433531, alpha: 0.74 });
-    this.body.stroke({ color: 0x7f5f43, width: 2.4, alpha: 0.58 });
+    this.body.ellipse(0, 0, 154, 98).fill({ color: 0x150f13, alpha: 0.22 });
+    this.body.ellipse(6, 20, 138, 72).fill({ color: 0x24181d, alpha: 0.18 });
+    this.body.stroke({ color: 0x87654a, width: 2, alpha: 0.18 });
 
     this.bodyScales.clear();
     this.bodyScales.ellipse(0, 0, 146, 92).fill({ color: 0xffffff, alpha: 0 });
 
     this.chestGlow.clear();
-    this.chestGlow.circle(10, 20, 54).fill({ color: 0xf3a64e, alpha: 0.34 });
+    this.chestGlow.circle(10, 20, 56).fill({ color: 0xf3a64e, alpha: 0.32 });
     this.chestGlow.blendMode = 'add';
+
+    this.throatShadow.clear();
+    this.throatShadow.ellipse(68, -34, 44, 22).fill({ color: 0x09060b, alpha: 0.22 });
+    this.throatShadow.ellipse(44, -8, 62, 32).fill({ color: 0x120b10, alpha: 0.18 });
+    this.throatShadow.blendMode = 'multiply';
+
+    this.bellyPlates.clear();
+    for (let i = 0; i < 6; i += 1) {
+      const t = i / 5;
+      this.bellyPlates
+        .ellipse(18 + t * 64, 24 + t * 18, 10 - t * 1.5, 6 - t * 0.8)
+        .fill({ color: 0xc5a075, alpha: 0.24 - t * 0.04 });
+    }
+    this.bellyPlates.stroke({ color: 0x5c422e, width: 1, alpha: 0.22 });
 
     this.rimLight.clear();
     this.rimLight.ellipse(0, -2, 160, 100).stroke({ color: 0xffda94, width: 4, alpha: 0.28 });
     this.rimLight.alpha = 0.28;
 
     this.tail.clear();
-    this.tail.poly([-122, 30, -226, 80, -192, 96, -116, 70]).fill({ color: 0x2f2a2c, alpha: 0.96 });
+    this.tail.poly([-122, 30, -226, 80, -192, 96, -116, 70]).fill({ color: 0x221c22, alpha: 0.2 });
 
     this.wing.clear();
-    this.wing.poly([-28, -48, -102, -132, 22, -124, 72, -24]).fill({ color: 0x2b2730, alpha: 0.93 });
+    this.wing.poly([-28, -48, -102, -132, 22, -124, 72, -24]).fill({ color: 0x19141f, alpha: 0.18 });
 
     this.neckSpines.clear();
-    this.neckSpines.poly([-40, -54, -2, -92, 20, -56]).fill({ color: 0x413336, alpha: 0.85 });
+    this.neckSpines.poly([-40, -54, -2, -92, 20, -56]).fill({ color: 0x2c2329, alpha: 0.24 });
 
     this.head.clear();
-    this.head.ellipse(84, -72, 54, 42).fill({ color: 0x352d32, alpha: 0.98 });
-    this.head.poly([108, -88, 146, -112, 128, -74]).fill({ color: 0x423438, alpha: 0.96 });
-    this.head.poly([104, -54, 142, -32, 120, -50]).fill({ color: 0x423438, alpha: 0.96 });
+    this.head.ellipse(84, -72, 54, 42).fill({ color: 0x231b22, alpha: 0.22 });
+    this.head.poly([108, -88, 146, -112, 128, -74]).fill({ color: 0x2f2530, alpha: 0.2 });
+    this.head.poly([104, -54, 142, -32, 120, -50]).fill({ color: 0x2f2530, alpha: 0.2 });
 
     this.eyeLeft.clear();
-    this.eyeLeft.circle(88, -84, 5).fill({ color: 0xffcf65, alpha: 0.94 });
+    this.eyeLeft.circle(88, -84, 5).fill({ color: 0xffcf65, alpha: 0.84 });
 
     this.eyeRight.clear();
-    this.eyeRight.circle(108, -82, 5).fill({ color: 0xffcf65, alpha: 0.94 });
+    this.eyeRight.circle(108, -82, 5).fill({ color: 0xffcf65, alpha: 0.82 });
+
+    this.clawLeft.clear();
+    this.clawLeft.poly([66, 82, 74, 98, 84, 84]).fill({ color: 0xcdb08b, alpha: 0.34 });
+    this.clawLeft.poly([78, 86, 88, 104, 98, 88]).fill({ color: 0xb69977, alpha: 0.3 });
+    this.clawLeft.blendMode = 'screen';
+
+    this.clawRight.clear();
+    this.clawRight.poly([98, 80, 106, 96, 116, 82]).fill({ color: 0xc5a884, alpha: 0.3 });
+    this.clawRight.poly([110, 84, 120, 102, 130, 86]).fill({ color: 0xb09172, alpha: 0.28 });
+    this.clawRight.blendMode = 'screen';
 
     this.mountSpriteLayers();
 
@@ -333,11 +415,15 @@ export class DragonActor {
       this.body,
       this.bodyScales,
       this.neckSpines,
+      this.bellyPlates,
       this.chestGlow,
+      this.throatShadow,
       this.rimLight,
       this.head,
       this.eyeLeft,
       this.eyeRight,
+      this.clawLeft,
+      this.clawRight,
     );
   }
 
@@ -397,6 +483,25 @@ export class DragonActor {
       },
     });
 
+    if (this.wingSprite) {
+      gsap.to(this.wingSprite, {
+        rotation: -0.22,
+        duration: 0.3,
+        yoyo: true,
+        repeat: 1,
+        ease: 'sine.inOut',
+      });
+    }
+    if (this.tailSprite) {
+      gsap.to(this.tailSprite, {
+        rotation: 0.26,
+        duration: 0.24,
+        yoyo: true,
+        repeat: 1,
+        ease: 'sine.inOut',
+      });
+    }
+
     if (this.jawSprite) {
       gsap.fromTo(
         this.jawSprite,
@@ -415,26 +520,27 @@ export class DragonActor {
       return;
     }
 
-    const tailSprite = this.createSprite('dragon-tail', 232, 126, -170, 86, 0.96);
-    const wingSprite = this.createSprite('dragon-wing', 222, 174, -24, -78, 0.9);
-    this.glowSprite = this.createSprite('dragon-glow', 214, 138, 8, 20, 0.36);
-    const bodySprite = this.createSprite('dragon-body', 336, 220, 0, 0, 0.97);
-    const scalesSprite = this.createSprite('dragon-scales', 188, 92, 0, 0, 0.72);
-    const spinesSprite = this.createSprite('dragon-spines', 164, 60, -8, -66, 0.64);
+    this.tailSprite = this.createSprite('dragon-tail', 244, 138, -170, 84, 0.98);
+    this.wingSprite = this.createSprite('dragon-wing', 236, 188, -22, -82, 0.9);
+    this.glowSprite = this.createSprite('dragon-glow', 220, 148, 10, 22, 0.34);
+    this.bodySprite = this.createSprite('dragon-body', 348, 232, 0, 0, 0.99);
+    this.scalesSprite = this.createSprite('dragon-scales', 196, 98, -1, 2, 0.72);
+    this.spinesSprite = this.createSprite('dragon-spines', 174, 64, -8, -68, 0.62);
 
-    const headSprite = this.createSprite('dragon-head', 176, 132, 94, -74, 0.98);
+    this.headSprite = this.createSprite('dragon-head', 188, 140, 94, -74, 0.98);
 
-    this.jawSprite = this.createSprite('dragon-jaw', 118, 58, 126, -42, 0.96);
+    this.jawSprite = this.createSprite('dragon-jaw', 124, 64, 128, -42, 0.96);
     this.jawSprite.anchor.set(0.18, 0.26);
     this.jawSprite.rotation = this.jawBaseRotation;
 
-    this.hornLeftSprite = this.createSprite('dragon-horn', 44, 58, 156, -132, 0.95);
-    this.hornRightSprite = this.createSprite('dragon-horn', 42, 56, 178, -126, 0.9);
+    this.hornLeftSprite = this.createSprite('dragon-horn', 48, 64, 156, -132, 0.96);
+    this.hornRightSprite = this.createSprite('dragon-horn', 44, 62, 178, -126, 0.92);
     this.hornRightSprite.scale.x = -0.86;
+    this.hornRightSprite.rotation = -0.06;
 
-    const leftEyeCore = this.createSprite('dragon-eye', 20, 10, 88, -84, 0.98);
-    const rightEyeCore = this.createSprite('dragon-eye', 19, 10, 108, -82, 0.95);
-    rightEyeCore.scale.x = 0.88;
+    this.eyeLeftCore = this.createSprite('dragon-eye', 21, 11, 88, -84, 0.98);
+    this.eyeRightCore = this.createSprite('dragon-eye', 20, 11, 108, -82, 0.95);
+    this.eyeRightCore.scale.x = 0.88;
 
     this.eyeAuraLeft = new Graphics();
     this.eyeAuraLeft.circle(88, -84, 10).fill({ color: 0xffbf66, alpha: 0.4 });
@@ -444,22 +550,22 @@ export class DragonActor {
     this.eyeAuraRight.circle(108, -82, 9).fill({ color: 0xffbf66, alpha: 0.36 });
     this.eyeAuraRight.blendMode = 'add';
 
-    this.tail.addChild(tailSprite);
-    this.wing.addChild(wingSprite);
+    this.tail.addChild(this.tailSprite);
+    this.wing.addChild(this.wingSprite);
     this.chestGlow.addChild(this.glowSprite);
-    this.body.addChild(bodySprite);
-    this.bodyScales.addChild(scalesSprite);
-    this.neckSpines.addChild(spinesSprite);
-    this.head.addChild(headSprite, this.hornLeftSprite, this.hornRightSprite, this.jawSprite);
-    this.eyeLeft.addChild(this.eyeAuraLeft, leftEyeCore);
-    this.eyeRight.addChild(this.eyeAuraRight, rightEyeCore);
+    this.body.addChild(this.bodySprite);
+    this.bodyScales.addChild(this.scalesSprite);
+    this.neckSpines.addChild(this.spinesSprite);
+    this.head.addChild(this.headSprite, this.hornLeftSprite, this.hornRightSprite, this.jawSprite);
+    this.eyeLeft.addChild(this.eyeAuraLeft, this.eyeLeftCore);
+    this.eyeRight.addChild(this.eyeAuraRight, this.eyeRightCore);
 
-    this.body.alpha = 0.88;
-    this.bodyScales.alpha = 0.9;
-    this.neckSpines.alpha = 0.9;
-    this.head.alpha = 0.94;
-    this.tail.alpha = 0.9;
-    this.wing.alpha = 0.84;
+    this.body.alpha = 0.98;
+    this.bodyScales.alpha = 0.88;
+    this.neckSpines.alpha = 0.82;
+    this.head.alpha = 0.96;
+    this.tail.alpha = 0.93;
+    this.wing.alpha = 0.9;
     this.eyeLeft.alpha = 0.86;
     this.eyeRight.alpha = 0.82;
 

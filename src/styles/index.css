@@ -1,24 +1,24 @@
 @import "./ui.css";
 
 :root {
-  --bg-0: #050304;
-  --bg-1: #15100f;
-  --bg-2: #2a1f1a;
-  --ink: #f1dfc2;
-  --ink-dim: #cdb28b;
-  --gold: #d6a852;
-  --gold-soft: #8a6733;
-  --teal: #61b8b9;
-  --ruby: #cc4b56;
-  --emerald: #32a77f;
-  --sapphire: #4a6fd6;
-  --amethyst: #8a59ba;
-  --surface: rgba(28, 20, 16, 0.72);
-  --surface-strong: rgba(20, 14, 11, 0.9);
-  --border: rgba(214, 168, 82, 0.55);
-  --shadow: rgba(0, 0, 0, 0.45);
+  --bg-0: #040304;
+  --bg-1: #120d0e;
+  --bg-2: #2a1d16;
+  --ink: #f4e2c2;
+  --ink-dim: #ceb48a;
+  --gold: #d9aa57;
+  --gold-soft: #826037;
+  --teal: #67bcc0;
+  --ruby: #c65a65;
+  --emerald: #3f9d7f;
+  --sapphire: #5f86d8;
+  --amethyst: #8e64bc;
+  --surface: rgba(31, 22, 17, 0.78);
+  --surface-strong: rgba(16, 11, 9, 0.88);
+  --border: rgba(212, 171, 104, 0.5);
+  --shadow: rgba(0, 0, 0, 0.56);
   color-scheme: dark;
-  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
 }
 
 * {
@@ -34,7 +34,9 @@ body,
 }
 
 body {
-  background: radial-gradient(circle at 40% 20%, #2b1f18, #0a0707 60%, #040304 100%);
+  background:
+    radial-gradient(circle at 52% 14%, rgba(86, 58, 32, 0.38), rgba(13, 9, 10, 0.2) 45%, rgba(5, 4, 5, 0.95) 100%),
+    linear-gradient(180deg, #19110e 0%, #080607 64%, #030303 100%);
   color: var(--ink);
   overflow: hidden;
 }
@@ -69,7 +71,9 @@ summary {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at 48% 42%, transparent 35%, rgba(0, 0, 0, 0.66) 100%);
+  background:
+    radial-gradient(circle at 50% 54%, transparent 32%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.34) 100%);
   mix-blend-mode: multiply;
   z-index: 8;
 }
@@ -85,11 +89,32 @@ summary {
 .controls,
 .help-popover,
 .access-list {
-  background: linear-gradient(145deg, rgba(58, 40, 28, 0.8), rgba(23, 16, 13, 0.84));
+  background:
+    linear-gradient(150deg, rgba(60, 42, 28, 0.82), rgba(22, 16, 13, 0.88)),
+    linear-gradient(0deg, rgba(255, 225, 168, 0.04), rgba(255, 225, 168, 0.04));
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 14px 34px var(--shadow), inset 0 0 0 1px rgba(255, 226, 170, 0.08);
-  backdrop-filter: blur(6px);
+  border-radius: 14px;
+  box-shadow:
+    0 18px 46px var(--shadow),
+    inset 0 0 0 1px rgba(255, 228, 181, 0.06),
+    inset 0 18px 28px rgba(255, 216, 166, 0.03);
+  backdrop-filter: blur(8px) saturate(108%);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before,
+.controls::before,
+.help-popover::before,
+.access-list::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(255, 232, 189, 0.14), transparent 42%),
+    linear-gradient(180deg, rgba(255, 214, 146, 0.04), rgba(255, 214, 146, 0));
+  mix-blend-mode: screen;
 }
 
 .visually-hidden {

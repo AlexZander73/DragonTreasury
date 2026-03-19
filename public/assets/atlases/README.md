@@ -19,3 +19,9 @@ Code wiring:
 - `src/scene/DragonActor.ts`
 
 The rig and physics systems are unchanged.
+
+Regenerate painted atlas textures:
+
+```bash
+python3 scripts/generate_painted_atlases.py
+```

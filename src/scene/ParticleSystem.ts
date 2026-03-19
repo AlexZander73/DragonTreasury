@@ -1,8 +1,11 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 import { clamp } from '../utils/math';
 
+type ParticleKind = 'dust' | 'spark' | 'ember' | 'smoke';
+
 interface Particle {
   sprite: Sprite;
+  kind: ParticleKind;
   x: number;
   y: number;
   vx: number;
@@ -10,12 +13,49 @@ interface Particle {
   life: number;
   ttl: number;
   spin: number;
+  baseAlpha: number;
+  baseScale: number;
+  fadeIn: number;
 }
 
 interface ParticleSystemOptions {
   maxParticles: number;
   reducedMotion: boolean;
 }
+
+interface SpawnConfig {
+  kind: ParticleKind;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  ttl: number;
+  tint: number;
+  alpha: number;
+  scale: number;
+  fadeIn?: number;
+}
+
+const makeRadialTexture = (size: number, inner: string, outer: string): Texture => {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return Texture.WHITE;
+  }
+
+  const radius = size * 0.5;
+  const gradient = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+  gradient.addColorStop(0, inner);
+  gradient.addColorStop(1, outer);
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(radius, radius, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  return Texture.from(canvas);
+};
 
 export class ParticleSystem {
   readonly container = new Container();
@@ -24,6 +64,14 @@ export class ParticleSystem {
   private maxParticles: number;
   private reducedMotion: boolean;
   private spawnAccumulator = 0;
+  private topDustAccumulator = 0;
+
+  private readonly textures = {
+    dust: makeRadialTexture(48, 'rgba(255, 237, 210, 0.9)', 'rgba(255, 237, 210, 0)'),
+    spark: makeRadialTexture(48, 'rgba(255, 249, 220, 1)', 'rgba(255, 249, 220, 0)'),
+    ember: makeRadialTexture(52, 'rgba(255, 171, 84, 0.96)', 'rgba(255, 81, 34, 0)'),
+    smoke: makeRadialTexture(64, 'rgba(190, 178, 166, 0.85)', 'rgba(120, 118, 125, 0)'),
+  };
 
   constructor(options: ParticleSystemOptions) {
     this.maxParticles = options.maxParticles;
@@ -40,17 +88,19 @@ export class ParticleSystem {
   }
 
   emitSparkle(x: number, y: number, intensity = 1): void {
-    const count = Math.max(1, Math.min(6, Math.round(intensity * 4)));
+    const count = Math.max(1, Math.min(7, Math.round(intensity * 4.5)));
     for (let i = 0; i < count; i += 1) {
       this.spawn({
-        x,
-        y,
-        vx: (Math.random() - 0.5) * 1.7,
-        vy: -Math.random() * 2.2,
-        ttl: 0.45 + Math.random() * 0.5,
-        tint: 0xffe8a3,
-        alpha: 0.85,
-        scale: 1 + Math.random() * 2,
+        kind: 'spark',
+        x: x + (Math.random() - 0.5) * 14,
+        y: y + (Math.random() - 0.5) * 8,
+        vx: (Math.random() - 0.5) * 1.9,
+        vy: -Math.random() * 2.4,
+        ttl: 0.42 + Math.random() * 0.55,
+        tint: 0xffefb2,
+        alpha: 0.95,
+        scale: 1.2 + Math.random() * 2.2,
+        fadeIn: 0.08,
       });
     }
   }
@@ -59,52 +109,75 @@ export class ParticleSystem {
     const count = this.reducedMotion ? 1 : 3;
     for (let i = 0; i < count; i += 1) {
       this.spawn({
-        x: x + (Math.random() - 0.5) * 6,
-        y: y + (Math.random() - 0.5) * 4,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: -0.25 - Math.random() * 0.5,
-        ttl: 1.4 + Math.random() * 1,
-        tint: 0xaaaaaa,
-        alpha: 0.18,
-        scale: 8 + Math.random() * 10,
+        kind: 'smoke',
+        x: x + (Math.random() - 0.5) * 8,
+        y: y + (Math.random() - 0.5) * 5,
+        vx: (Math.random() - 0.5) * 0.23,
+        vy: -0.22 - Math.random() * 0.52,
+        ttl: 1.25 + Math.random() * 1.1,
+        tint: 0xc2b7ac,
+        alpha: 0.22,
+        scale: 7.4 + Math.random() * 8.2,
+        fadeIn: 0.18,
       });
     }
   }
 
   emitEmber(x: number, y: number): void {
     this.spawn({
+      kind: 'ember',
       x,
       y,
-      vx: (Math.random() - 0.5) * 0.8,
-      vy: -0.6 - Math.random() * 1.2,
-      ttl: 0.7 + Math.random() * 0.6,
-      tint: Math.random() > 0.35 ? 0xffaa44 : 0xff4d2f,
-      alpha: 0.75,
-      scale: 1.4 + Math.random() * 1.3,
+      vx: (Math.random() - 0.5) * 1.1,
+      vy: -0.55 - Math.random() * 1.45,
+      ttl: 0.66 + Math.random() * 0.7,
+      tint: Math.random() > 0.35 ? 0xffb05c : 0xff5b30,
+      alpha: 0.82,
+      scale: 1.5 + Math.random() * 1.6,
+      fadeIn: 0.06,
     });
   }
 
   update(dt: number, width: number, height: number): void {
     if (!this.reducedMotion) {
       this.spawnAccumulator += dt;
-      if (this.spawnAccumulator > 0.035) {
+      if (this.spawnAccumulator > 0.05) {
         this.spawnAccumulator = 0;
         const x = Math.random() * width;
-        const y = height * 0.3 + Math.random() * (height * 0.6);
+        const y = height * 0.3 + Math.random() * (height * 0.62);
         this.spawn({
+          kind: 'dust',
           x,
           y,
-          vx: (Math.random() - 0.5) * 0.1,
-          vy: -0.06 - Math.random() * 0.14,
-          ttl: 4.5 + Math.random() * 4,
-          tint: 0xffe8cc,
-          alpha: 0.09,
-          scale: 1.5 + Math.random() * 2,
+          vx: (Math.random() - 0.5) * 0.14,
+          vy: -0.05 - Math.random() * 0.15,
+          ttl: 4.2 + Math.random() * 4.6,
+          tint: 0xffebca,
+          alpha: 0.12,
+          scale: 1.6 + Math.random() * 2.6,
+          fadeIn: 0.22,
         });
 
-        if (Math.random() < 0.25) {
-          this.emitEmber(width * (0.2 + Math.random() * 0.6), height * (0.55 + Math.random() * 0.35));
+        if (Math.random() < 0.18) {
+          this.emitEmber(width * (0.18 + Math.random() * 0.62), height * (0.55 + Math.random() * 0.32));
         }
+      }
+
+      this.topDustAccumulator += dt;
+      if (this.topDustAccumulator > 1.2 + Math.random() * 1.4) {
+        this.topDustAccumulator = 0;
+        this.spawn({
+          kind: 'dust',
+          x: width * (0.16 + Math.random() * 0.68),
+          y: height * 0.2,
+          vx: (Math.random() - 0.5) * 0.1,
+          vy: 0.1 + Math.random() * 0.18,
+          ttl: 2.6 + Math.random() * 1.8,
+          tint: 0xd8c5a3,
+          alpha: 0.08,
+          scale: 1.2 + Math.random() * 1.8,
+          fadeIn: 0.2,
+        });
       }
     }
 
@@ -113,15 +186,41 @@ export class ParticleSystem {
       particle.life += dt;
       const progress = particle.life / particle.ttl;
 
+      if (particle.kind === 'smoke') {
+        particle.vx *= 0.994;
+        particle.vy *= 0.988;
+        particle.vy -= 0.0015;
+      } else if (particle.kind === 'ember') {
+        particle.vx *= 0.992;
+        particle.vy *= 0.986;
+      } else if (particle.kind === 'spark') {
+        particle.vx *= 0.986;
+        particle.vy *= 0.982;
+      } else {
+        particle.vx *= 0.996;
+        particle.vy *= 0.994;
+      }
+
       particle.x += particle.vx;
       particle.y += particle.vy;
-      particle.vx *= 0.995;
-      particle.vy *= 0.99;
 
       particle.sprite.x = particle.x;
       particle.sprite.y = particle.y;
       particle.sprite.rotation += particle.spin;
-      particle.sprite.alpha = clamp((1 - progress) * particle.sprite.alpha, 0, 1);
+
+      const fadeInProgress = clamp(progress / Math.max(0.01, particle.fadeIn), 0, 1);
+      const fadeOutProgress = clamp((1 - progress) / 0.45, 0, 1);
+      particle.sprite.alpha = particle.baseAlpha * fadeInProgress * fadeOutProgress;
+
+      if (particle.kind === 'smoke') {
+        const puff = 1 + progress * 0.56;
+        particle.sprite.scale.set(particle.baseScale * puff);
+      } else if (particle.kind === 'spark') {
+        const flicker = 0.88 + Math.sin(performance.now() * 0.02 + index) * 0.18;
+        particle.sprite.scale.set(particle.baseScale * flicker);
+      } else {
+        particle.sprite.scale.set(particle.baseScale);
+      }
 
       if (particle.life >= particle.ttl) {
         this.recycle(index);
@@ -139,29 +238,31 @@ export class ParticleSystem {
     this.clear();
     this.container.destroy({ children: true });
     this.pool = [];
+
+    this.textures.dust.destroy(true);
+    this.textures.spark.destroy(true);
+    this.textures.ember.destroy(true);
+    this.textures.smoke.destroy(true);
   }
 
-  private spawn(config: {
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    ttl: number;
-    tint: number;
-    alpha: number;
-    scale: number;
-  }): void {
+  private spawn(config: SpawnConfig): void {
     if (this.particles.length >= this.maxParticles) {
       return;
     }
 
-    const sprite = this.pool.pop() ?? Sprite.from(Texture.WHITE);
+    const sprite = this.pool.pop() ?? new Sprite();
+    sprite.texture = this.textures[config.kind] ?? Texture.WHITE;
     sprite.anchor.set(0.5);
     sprite.width = config.scale;
     sprite.height = config.scale;
     sprite.tint = config.tint;
     sprite.alpha = config.alpha;
-    sprite.blendMode = 'add';
+    sprite.blendMode =
+      config.kind === 'smoke'
+        ? 'normal'
+        : config.kind === 'dust'
+          ? 'screen'
+          : 'add';
     sprite.x = config.x;
     sprite.y = config.y;
 
@@ -169,13 +270,17 @@ export class ParticleSystem {
 
     this.particles.push({
       sprite,
+      kind: config.kind,
       x: config.x,
       y: config.y,
       vx: config.vx,
       vy: config.vy,
       life: 0,
       ttl: config.ttl,
-      spin: (Math.random() - 0.5) * 0.04,
+      spin: (Math.random() - 0.5) * 0.06,
+      baseAlpha: config.alpha,
+      baseScale: config.scale,
+      fadeIn: config.fadeIn ?? 0.15,
     });
   }
 

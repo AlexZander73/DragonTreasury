@@ -53,6 +53,8 @@ export class HoardScene {
   private overlayLayer = new Container();
   private torchLight: Sprite | null = null;
   private foregroundMist: Sprite | null = null;
+  private hoardWarmth: Graphics | null = null;
+  private edgeVeil: Graphics | null = null;
 
   private entities = new Map<string, TreasureEntity>();
   private itemsById = new Map<string, HoardItem>();
@@ -509,6 +511,18 @@ export class HoardScene {
       this.foregroundMist.x = parallaxX * -8;
       this.foregroundMist.y = parallaxY * -5;
     }
+
+    if (this.hoardWarmth) {
+      const warmthPulse = this.reducedMotion ? 0.9 : 0.84 + Math.sin(this.drift * 1.15) * 0.11;
+      this.hoardWarmth.alpha = 0.42 * warmthPulse;
+    }
+
+    if (this.edgeVeil) {
+      const veilWave = this.reducedMotion ? 1 : 0.94 + Math.sin(this.drift * 0.32) * 0.04;
+      this.edgeVeil.alpha = 0.55 * veilWave;
+      this.edgeVeil.x = parallaxX * 2;
+      this.edgeVeil.y = parallaxY * 1.5;
+    }
   }
 
   private drawBackground(): void {
@@ -520,72 +534,93 @@ export class HoardScene {
     const h = this.host.clientHeight;
 
     const haze = new Graphics();
-    haze.rect(0, 0, w, h).fill({ color: 0x0a0708, alpha: 0.72 });
+    haze.rect(0, 0, w, h).fill({ color: 0x070507, alpha: 0.8 });
 
     const backdrop = Sprite.from(withBase('/assets/backgrounds/cave-backdrop.svg'));
     backdrop.width = w;
     backdrop.height = h;
-    backdrop.alpha = 0.78;
+    backdrop.alpha = 0.86;
 
     const colorGrade = Sprite.from(withBase('/assets/backgrounds/cave-color-grade.svg'));
     colorGrade.width = w;
     colorGrade.height = h;
-    colorGrade.alpha = 0.72;
+    colorGrade.alpha = 0.8;
+
+    const edgeShadow = new Graphics();
+    edgeShadow.rect(0, 0, w, h).fill({ color: 0x040304, alpha: 0.52 });
+    edgeShadow.ellipse(w * 0.5, h * 0.55, w * 0.46, h * 0.34).fill({ color: 0x000000, alpha: 0.14 });
 
     const wallGlow = new Graphics();
-    wallGlow.ellipse(w * 0.5, h * 0.33, w * 0.42, h * 0.28).fill({ color: 0x51361f, alpha: 0.33 });
-    wallGlow.ellipse(w * 0.25, h * 0.48, w * 0.23, h * 0.2).fill({ color: 0x31221a, alpha: 0.42 });
-    wallGlow.ellipse(w * 0.76, h * 0.44, w * 0.2, h * 0.17).fill({ color: 0x382821, alpha: 0.33 });
+    wallGlow.ellipse(w * 0.5, h * 0.33, w * 0.42, h * 0.28).fill({ color: 0x5f3f24, alpha: 0.36 });
+    wallGlow.ellipse(w * 0.25, h * 0.48, w * 0.23, h * 0.2).fill({ color: 0x302119, alpha: 0.44 });
+    wallGlow.ellipse(w * 0.76, h * 0.44, w * 0.2, h * 0.17).fill({ color: 0x3a2a22, alpha: 0.36 });
+    wallGlow.ellipse(w * 0.56, h * 0.62, w * 0.26, h * 0.1).fill({ color: 0x3f2a1b, alpha: 0.22 });
 
     const farRocks = new Graphics();
     farRocks.poly([0, h * 0.56, w * 0.16, h * 0.45, w * 0.3, h * 0.6, 0, h * 0.72]).fill({
       color: 0x161316,
-      alpha: 0.72,
+      alpha: 0.78,
     });
     farRocks.poly([w * 0.67, h * 0.52, w, h * 0.46, w, h * 0.78, w * 0.58, h * 0.76]).fill({
       color: 0x18141a,
-      alpha: 0.76,
+      alpha: 0.82,
     });
 
+    const pillarOcclusion = new Graphics();
+    pillarOcclusion.poly([0, h, 0, h * 0.34, w * 0.09, h * 0.24, w * 0.13, h]).fill({ color: 0x050407, alpha: 0.66 });
+    pillarOcclusion
+      .poly([w, h, w, h * 0.28, w * 0.9, h * 0.22, w * 0.86, h])
+      .fill({ color: 0x060408, alpha: 0.62 });
+
     const fog = new Graphics();
-    fog.ellipse(w * 0.5, h * 0.74, w * 0.6, h * 0.18).fill({ color: 0x856146, alpha: 0.13 });
+    fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: 0x8f6748, alpha: 0.15 });
 
     const midground = Sprite.from(withBase('/assets/backgrounds/cave-midground.svg'));
     midground.width = w;
     midground.height = h;
-    midground.alpha = 0.7;
+    midground.alpha = 0.78;
 
     const fogOverlay = Sprite.from(withBase('/assets/backgrounds/cave-fog.svg'));
     fogOverlay.width = w;
     fogOverlay.height = h;
-    fogOverlay.alpha = 0.56;
+    fogOverlay.alpha = 0.6;
 
     const vignetteOverlay = Sprite.from(withBase('/assets/backgrounds/cave-vignette.svg'));
     vignetteOverlay.width = w;
     vignetteOverlay.height = h;
-    vignetteOverlay.alpha = 0.46;
+    vignetteOverlay.alpha = 0.56;
 
     const mound = new Graphics();
-    mound.ellipse(w * 0.5, h * 0.88, w * 0.44, h * 0.17).fill({ color: 0x231a16, alpha: 0.86 });
-    mound.ellipse(w * 0.5, h * 0.9, w * 0.35, h * 0.12).fill({ color: 0x34261a, alpha: 0.38 });
+    mound.ellipse(w * 0.5, h * 0.88, w * 0.46, h * 0.18).fill({ color: 0x1f1714, alpha: 0.9 });
+    mound.ellipse(w * 0.5, h * 0.9, w * 0.37, h * 0.12).fill({ color: 0x3a291c, alpha: 0.4 });
 
-    this.bgLayer.addChild(haze, backdrop, colorGrade, wallGlow, farRocks);
-    this.midLayer.addChild(midground, fog, fogOverlay, mound, vignetteOverlay);
+    this.hoardWarmth = new Graphics();
+    this.hoardWarmth.ellipse(w * 0.5, h * 0.74, w * 0.28, h * 0.14).fill({ color: 0xd58e4e, alpha: 0.38 });
+    this.hoardWarmth.ellipse(w * 0.52, h * 0.8, w * 0.22, h * 0.09).fill({ color: 0xa15f2f, alpha: 0.28 });
+    this.hoardWarmth.blendMode = 'add';
+
+    this.bgLayer.addChild(haze, backdrop, colorGrade, edgeShadow, wallGlow, farRocks, pillarOcclusion);
+    this.midLayer.addChild(midground, fog, fogOverlay, this.hoardWarmth, mound, vignetteOverlay);
 
     this.torchLight = Sprite.from(withBase('/assets/backgrounds/torch-light.svg'));
     this.torchLight.anchor.set(0.5);
-    this.torchLight.width = w * 0.7;
-    this.torchLight.height = h * 0.58;
-    this.torchLight.position.set(w * 0.5, h * 0.34);
-    this.torchLight.alpha = 0.5;
+    this.torchLight.width = w * 0.74;
+    this.torchLight.height = h * 0.62;
+    this.torchLight.position.set(w * 0.5, h * 0.36);
+    this.torchLight.alpha = 0.54;
     this.torchLight.blendMode = 'add';
 
     this.foregroundMist = Sprite.from(withBase('/assets/backgrounds/foreground-mist.svg'));
     this.foregroundMist.width = w;
     this.foregroundMist.height = h;
-    this.foregroundMist.alpha = 0.26;
+    this.foregroundMist.alpha = 0.29;
 
-    this.overlayLayer.addChild(this.torchLight, this.foregroundMist);
+    this.edgeVeil = new Graphics();
+    this.edgeVeil.rect(0, 0, w, h).fill({ color: 0x050406, alpha: 0.54 });
+    this.edgeVeil.ellipse(w * 0.52, h * 0.56, w * 0.44, h * 0.33).fill({ color: 0x000000, alpha: 0.1 });
+    this.edgeVeil.blendMode = 'multiply';
+
+    this.overlayLayer.addChild(this.torchLight, this.foregroundMist, this.edgeVeil);
   }
 
   private positionDragon(): void {

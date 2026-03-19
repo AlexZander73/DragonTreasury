@@ -23,41 +23,52 @@ const rarityScaleToSize: Record<Rarity, SizeClass> = {
 };
 
 const baseMassBySize: Record<SizeClass, number> = {
-  tiny: 0.4,
-  small: 0.8,
-  medium: 1.5,
-  large: 2.2,
-  huge: 3.6,
+  tiny: 0.65,
+  small: 1.2,
+  medium: 2.1,
+  large: 3.2,
+  huge: 5.1,
 };
 
 const typeBounciness: Record<TreasureType, number> = {
-  coin: 0.38,
-  gem: 0.3,
-  artifact: 0.18,
-  'legendary-relic': 0.14,
-  'cursed-item': 0.22,
-  'metal-idol': 0.09,
-  'arcane-crystal': 0.28,
-  'scroll-capsule': 0.2,
+  coin: 0.22,
+  gem: 0.24,
+  artifact: 0.1,
+  'legendary-relic': 0.07,
+  'cursed-item': 0.13,
+  'metal-idol': 0.05,
+  'arcane-crystal': 0.2,
+  'scroll-capsule': 0.08,
 };
 
 const typeFriction: Record<TreasureType, number> = {
-  coin: 0.025,
-  gem: 0.04,
-  artifact: 0.08,
-  'legendary-relic': 0.1,
-  'cursed-item': 0.09,
-  'metal-idol': 0.12,
-  'arcane-crystal': 0.07,
-  'scroll-capsule': 0.11,
+  coin: 0.09,
+  gem: 0.08,
+  artifact: 0.15,
+  'legendary-relic': 0.18,
+  'cursed-item': 0.16,
+  'metal-idol': 0.24,
+  'arcane-crystal': 0.11,
+  'scroll-capsule': 0.22,
 };
 
 const rarityMassMult: Record<Rarity, number> = {
-  common: 0.9,
+  common: 0.95,
   uncommon: 1,
-  rare: 1.15,
-  epic: 1.28,
-  legendary: 1.45,
+  rare: 1.18,
+  epic: 1.34,
+  legendary: 1.54,
+};
+
+const typeAirDrag: Record<TreasureType, number> = {
+  coin: 0.05,
+  gem: 0.045,
+  artifact: 0.055,
+  'legendary-relic': 0.06,
+  'cursed-item': 0.055,
+  'metal-idol': 0.068,
+  'arcane-crystal': 0.05,
+  'scroll-capsule': 0.064,
 };
 
 export const buildPhysicsProfile = (type: TreasureType, rarity: Rarity, sizeOverride?: SizeClass): PhysicsProfile => {
@@ -69,7 +80,7 @@ export const buildPhysicsProfile = (type: TreasureType, rarity: Rarity, sizeOver
     sizeClass,
     restitution: typeBounciness[type],
     friction: typeFriction[type],
-    frictionAir: type === 'coin' ? 0.015 : 0.03,
+    frictionAir: typeAirDrag[type],
   };
 };
 

@@ -12,6 +12,7 @@ export const LoadingScreen = ({ visible }: LoadingScreenProps) => {
       <div className="loading-card">
         <h2>Entering The Hoard</h2>
         <p>Stoking embers, waking the dragon, arranging relics...</p>
+        <p aria-hidden="true">✦ ✧ ✦</p>
       </div>
     </div>
   );

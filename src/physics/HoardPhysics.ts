@@ -136,7 +136,8 @@ export class HoardPhysics {
     body.restitution = item.physics.restitution;
     body.friction = item.physics.friction;
     body.frictionAir = item.physics.frictionAir ?? 0.03;
-    Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.45, y: 0 });
+    Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.22, y: Math.random() * 0.12 });
+    Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.018);
     Sleeping.set(body, false);
 
     this.bodies.set(item.id, body);
@@ -228,8 +229,8 @@ export class HoardPhysics {
     }
 
     Body.applyForce(bestBody, bestBody.position, {
-      x: (Math.random() - 0.5) * 0.015,
-      y: -0.02,
+      x: (Math.random() - 0.5) * 0.009,
+      y: -0.012,
     });
   }
 
@@ -395,24 +396,35 @@ export class HoardPhysics {
 
   private computeSpawnPoint(item: HoardItem, index: number, total: number, mode: 'pile' | 'drop'): Vector {
     const rng = createSeededRng(`${item.id}:${index}`);
-    const clusterIndex = index % 4;
-    const clusterWidth = this.width * 0.18;
+    const normalizedIndex = total <= 1 ? 0.5 : index / (total - 1);
+    const arc = Math.sin(normalizedIndex * Math.PI);
+    const clusterIndex = index % 5;
+    const clusterOffset = (clusterIndex - 2) * (this.width * 0.065);
 
-    const baseX = this.width * 0.35 + clusterIndex * clusterWidth;
-    const spreadX = (rng() - 0.5) * 120;
-    const spreadY = rng() * 100;
+    const sizeBiasByClass = {
+      tiny: -1.2,
+      small: -0.8,
+      medium: 0,
+      large: 0.85,
+      huge: 1.2,
+    } as const;
+    const sizeBias = sizeBiasByClass[item.physics.sizeClass] ?? 0;
 
-    const pileY = this.height * 0.34 + spreadY + (index / Math.max(1, total)) * 48;
+    const moundCenterX = this.width * 0.5 + clusterOffset * (0.5 + rng() * 0.4);
+    const spreadX = (rng() - 0.5) * (this.width * 0.2) * (0.6 + arc * 0.55);
+    const spreadY = rng() * 82 + Math.abs(clusterIndex - 2) * 8;
+
+    const pileY = this.height * (0.33 + arc * 0.085) + spreadY + sizeBias * 16;
     if (mode === 'pile') {
       return {
-        x: clamp(baseX + spreadX, this.width * 0.15, this.width * 0.85),
+        x: clamp(moundCenterX + spreadX, this.width * 0.16, this.width * 0.84),
         y: pileY,
       };
     }
 
     return {
-      x: clamp(baseX + spreadX, this.width * 0.15, this.width * 0.85),
-      y: -120 - rng() * 180 - index * 3,
+      x: clamp(moundCenterX + spreadX * 0.86, this.width * 0.16, this.width * 0.84),
+      y: -140 - rng() * 220 - index * 3.2 - sizeBias * 18,
     };
   }
 
