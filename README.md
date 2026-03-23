@@ -206,6 +206,12 @@ Target range is approximately 40–100 physics items with graceful behavior.
 python3 scripts/generate_painted_atlases.py
 ```
 
+Optional trace-cutout mode:
+
+- Drop `dragon-reference.(png|webp|jpg)` and/or `treasure-reference.(png|webp|jpg)` into `public/assets/source/`.
+- Optional: place direct traced cutouts in `public/assets/source/dragon-parts/` and `public/assets/source/treasure-parts/` with part names from `public/assets/source/README.md`.
+- The generator prefers direct cutout files, then sheet crops, then procedural painted fallback.
+
 The rig and physics layer contracts stay stable as long as frame keys and dimensions remain consistent.
 
 ## Notes on Static Compatibility

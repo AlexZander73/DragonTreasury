@@ -191,6 +191,7 @@ export class HoardScene {
   private itemsById = new Map<string, HoardItem>();
   private clickHistory = new Map<string, number>();
   private visibleItemIds = new Set<string>();
+  private visibilitySynced = false;
 
   private selectedItemId: string | null = null;
   private hoverItemId: string | null = null;
@@ -302,6 +303,7 @@ export class HoardScene {
     const visibilityHandler = (): void => {
       this.hidden = document.hidden;
     };
+    visibilityHandler();
     document.addEventListener('visibilitychange', visibilityHandler);
 
     (this.app.canvas as HTMLCanvasElement).dataset.visibilityBound = '1';
@@ -357,7 +359,8 @@ export class HoardScene {
   }
 
   setVisibleItems(ids: Set<string>): void {
-    this.visibleItemIds = ids;
+    this.visibleItemIds = new Set(ids);
+    this.visibilitySynced = true;
   }
 
   setSelectedItem(id: string | null): void {
@@ -386,6 +389,9 @@ export class HoardScene {
 
   setItems(items: HoardItem[]): void {
     this.itemsById = new Map(items.map((item) => [item.id, item]));
+    if (!this.visibilitySynced && this.visibleItemIds.size === 0 && items.length > 0) {
+      this.visibleItemIds = new Set(items.map((item) => item.id));
+    }
 
     if (!this.physics) {
       return;
@@ -603,6 +609,9 @@ export class HoardScene {
 
   private update(dt: number): void {
     if (!this.app || !this.physics) {
+      return;
+    }
+    if (this.hidden && document.hidden) {
       return;
     }
 

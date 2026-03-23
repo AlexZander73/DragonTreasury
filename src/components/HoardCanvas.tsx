@@ -77,6 +77,7 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
     }
 
     let cancelled = false;
+    let loadedSignaled = false;
     sceneReadyRef.current = false;
     const scene = new HoardScene({
       host: hostRef.current,
@@ -99,27 +100,45 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
     });
 
     sceneRef.current = scene;
+    const signalLoaded = (): void => {
+      if (loadedSignaled) {
+        return;
+      }
+      loadedSignaled = true;
+      onLoaded();
+    };
+
+    const initTimeout = window.setTimeout(() => {
+      if (cancelled || sceneReadyRef.current) {
+        return;
+      }
+      console.warn('Scene initialization timed out; continuing UI load.');
+      signalLoaded();
+    }, 6500);
 
     preloadAtlasTextures()
       .then(() => scene.init(items))
       .then(() => {
+        window.clearTimeout(initTimeout);
         if (cancelled) {
           return;
         }
         sceneReadyRef.current = true;
         scene.setItems(latestItemsRef.current);
         scene.setVisibleItems(latestVisibleItemIdsRef.current);
-        onLoaded();
+        signalLoaded();
       })
       .catch((error) => {
+        window.clearTimeout(initTimeout);
         console.error('Failed to initialize scene', error);
         if (!cancelled) {
-          onLoaded();
+          signalLoaded();
         }
       });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(initTimeout);
       sceneReadyRef.current = false;
       sceneRef.current?.destroy();
       sceneRef.current = null;

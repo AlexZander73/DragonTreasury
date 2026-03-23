@@ -17,8 +17,53 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 ATLAS_DIR = ROOT / "public" / "assets" / "atlases"
+SOURCE_DIR = ROOT / "public" / "assets" / "source"
+DRAGON_PARTS_DIR = SOURCE_DIR / "dragon-parts"
+TREASURE_PARTS_DIR = SOURCE_DIR / "treasure-parts"
 
 Color = Tuple[int, int, int, int]
+
+DRAGON_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
+    "dragon-body": (10, 330, 390, 670),
+    "dragon-head": (18, 18, 354, 404),
+    "dragon-jaw": (150, 136, 324, 282),
+    "dragon-tail": (426, 284, 1008, 676),
+    "dragon-wing": (324, 18, 1018, 410),
+    "dragon-eye": (184, 126, 252, 194),
+    "dragon-horn": (40, 8, 244, 220),
+    "dragon-scales": (430, 314, 694, 548),
+    "dragon-spines": (516, 356, 892, 566),
+    "dragon-glow": (594, 520, 1022, 1022),
+}
+
+TREASURE_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
+    "gem": (394, 558, 520, 696),
+    "arcane-crystal": (454, 686, 578, 816),
+}
+
+DRAGON_PART_ALIASES: Dict[str, tuple[str, ...]] = {
+    "dragon-body": ("dragon-body", "body"),
+    "dragon-head": ("dragon-head", "head"),
+    "dragon-jaw": ("dragon-jaw", "jaw", "mouth"),
+    "dragon-tail": ("dragon-tail", "tail"),
+    "dragon-wing": ("dragon-wing", "wing"),
+    "dragon-eye": ("dragon-eye", "eye"),
+    "dragon-horn": ("dragon-horn", "horn"),
+    "dragon-scales": ("dragon-scales", "scales"),
+    "dragon-spines": ("dragon-spines", "spines"),
+    "dragon-glow": ("dragon-glow", "glow", "ember"),
+}
+
+TREASURE_PART_ALIASES: Dict[str, tuple[str, ...]] = {
+    "coin": ("coin",),
+    "gem": ("gem", "gem-blue", "gem-red"),
+    "artifact": ("artifact", "relic"),
+    "legendary-relic": ("legendary-relic", "legendary"),
+    "cursed-item": ("cursed-item", "cursed"),
+    "metal-idol": ("metal-idol", "idol"),
+    "arcane-crystal": ("arcane-crystal", "crystal"),
+    "scroll-capsule": ("scroll-capsule", "scroll"),
+}
 
 
 def rgba(hex_color: str, alpha: int = 255) -> Color:
@@ -76,6 +121,89 @@ def clip_alpha_floor(image: Image.Image, threshold: int) -> Image.Image:
     a = a.point(lambda value: 0 if value < threshold else value)
     rgba_img.putalpha(a)
     return rgba_img
+
+
+def first_existing(paths: list[Path]) -> Path | None:
+    for path in paths:
+        if path.exists():
+            return path
+    return None
+
+
+def load_reference_image(candidates: list[str]) -> Image.Image | None:
+    path = first_existing([SOURCE_DIR / name for name in candidates])
+    if not path:
+        return None
+    return Image.open(path).convert("RGBA")
+
+
+def chroma_key_light_background(image: Image.Image, min_luma: int = 214, max_channel_diff: int = 22) -> Image.Image:
+    img = image.convert("RGBA")
+    out = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    src_px = img.load()
+    dst_px = out.load()
+    w, h = img.size
+
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = src_px[x, y]
+            max_c = max(r, g, b)
+            min_c = min(r, g, b)
+            if max_c >= min_luma and (max_c - min_c) <= max_channel_diff:
+                dst_px[x, y] = (0, 0, 0, 0)
+            else:
+                dst_px[x, y] = (r, g, b, a)
+
+    alpha = out.split()[3].filter(ImageFilter.GaussianBlur(0.7))
+    out.putalpha(alpha)
+    return out
+
+
+def trim_to_alpha_bounds(image: Image.Image, padding: int = 8) -> Image.Image:
+    rgba_img = image.convert("RGBA")
+    bbox = rgba_img.getbbox()
+    if not bbox:
+        return rgba_img
+    left = max(0, bbox[0] - padding)
+    top = max(0, bbox[1] - padding)
+    right = min(rgba_img.width, bbox[2] + padding)
+    bottom = min(rgba_img.height, bbox[3] + padding)
+    return rgba_img.crop((left, top, right, bottom))
+
+
+def prepare_reference_part(image: Image.Image, target_size: tuple[int, int]) -> Image.Image:
+    cutout = chroma_key_light_background(image.convert("RGBA"))
+    cutout = trim_to_alpha_bounds(cutout, padding=10)
+    cutout = cutout.filter(ImageFilter.UnsharpMask(radius=1.4, percent=120, threshold=5))
+
+    target = Image.new("RGBA", target_size, (0, 0, 0, 0))
+    fitted = ImageOps.contain(cutout, target_size, method=Image.Resampling.LANCZOS)
+    x = (target_size[0] - fitted.width) // 2
+    y = (target_size[1] - fitted.height) // 2
+    target.alpha_composite(fitted, (x, y))
+    return target
+
+
+def crop_reference_part(source: Image.Image, box: tuple[int, int, int, int], target_size: tuple[int, int]) -> Image.Image:
+    crop = source.crop(box).convert("RGBA")
+    return prepare_reference_part(crop, target_size)
+
+
+def load_reference_part_file(part_dir: Path, aliases: tuple[str, ...], target_size: tuple[int, int]) -> Image.Image | None:
+    candidates: list[Path] = []
+    for alias in aliases:
+        candidates.extend(
+            (
+                part_dir / f"{alias}.png",
+                part_dir / f"{alias}.webp",
+                part_dir / f"{alias}.jpg",
+                part_dir / f"{alias}.jpeg",
+            )
+        )
+    path = first_existing(candidates)
+    if not path:
+        return None
+    return prepare_reference_part(Image.open(path).convert("RGBA"), target_size)
 
 
 def add_masked_grain(
@@ -154,44 +282,46 @@ def paint_coin(size: tuple[int, int]) -> Image.Image:
 def paint_gem(size: tuple[int, int], tone: str = "sapphire") -> Image.Image:
     w, h = size
     img = Image.new("RGBA", size, (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
+    d = ImageDraw.Draw(img, "RGBA")
 
     tone_map = {
-        "sapphire": ("#c6e2ff", "#4d7fca", "#1d3159"),
-        "emerald": ("#cdf7e7", "#4a9d86", "#183f38"),
-        "amethyst": ("#ecd7ff", "#8965c2", "#352355"),
-        "arcane": ("#d8ffff", "#54b6be", "#1e4652"),
+        "sapphire": ("#d8eeff", "#3f80db", "#0f3268"),
+        "emerald": ("#d5ffd7", "#45b067", "#1c5e2f"),
+        "amethyst": ("#f0ddff", "#9a63d8", "#421d74"),
+        "arcane": ("#dcffff", "#3dbfc9", "#165764"),
     }
     light, mid, dark = tone_map[tone]
 
-    poly = [
-        (w * 0.50, h * 0.10),
-        (w * 0.86, h * 0.35),
-        (w * 0.70, h * 0.90),
-        (w * 0.30, h * 0.90),
-        (w * 0.14, h * 0.35),
-    ]
+    if tone == "emerald":
+        poly = [(w * 0.50, h * 0.08), (w * 0.84, h * 0.28), (w * 0.76, h * 0.84), (w * 0.32, h * 0.92), (w * 0.12, h * 0.36)]
+    elif tone == "amethyst":
+        poly = [(w * 0.50, h * 0.06), (w * 0.86, h * 0.24), (w * 0.82, h * 0.78), (w * 0.46, h * 0.94), (w * 0.14, h * 0.62), (w * 0.16, h * 0.20)]
+    elif tone == "arcane":
+        poly = [(w * 0.50, h * 0.08), (w * 0.88, h * 0.26), (w * 0.70, h * 0.90), (w * 0.30, h * 0.90), (w * 0.12, h * 0.26)]
+    else:
+        poly = [(w * 0.50, h * 0.08), (w * 0.86, h * 0.30), (w * 0.74, h * 0.90), (w * 0.30, h * 0.92), (w * 0.12, h * 0.36)]
 
     mask = Image.new("L", size, 0)
     md = ImageDraw.Draw(mask)
     md.polygon(poly, fill=255)
 
-    fill = radial_glow(size, rgba(light, 255), rgba(dark, 255), power=1.2)
+    fill = radial_glow(size, rgba(light, 255), rgba(dark, 255), power=1.08)
     img.alpha_composite(apply_mask(fill, mask))
 
-    d.polygon(poly, outline=rgba("f3fdff", 180), width=4)
-    d.polygon([(w * 0.50, h * 0.14), (w * 0.67, h * 0.33), (w * 0.33, h * 0.33)], fill=rgba(light, 120))
-    d.polygon([(w * 0.14, h * 0.35), (w * 0.50, h * 0.14), (w * 0.50, h * 0.90)], fill=rgba(mid, 110))
-    d.polygon([(w * 0.86, h * 0.35), (w * 0.50, h * 0.14), (w * 0.50, h * 0.90)], fill=rgba(dark, 140))
-    d.polygon([(w * 0.36, h * 0.40), (w * 0.64, h * 0.40), (w * 0.50, h * 0.55)], fill=rgba("ffffff", 75))
+    d.polygon(poly, outline=rgba("f3fdff", 215), width=4)
+    d.polygon([(w * 0.50, h * 0.12), (w * 0.70, h * 0.30), (w * 0.30, h * 0.32)], fill=rgba(light, 140))
+    d.polygon([(w * 0.14, h * 0.33), (w * 0.50, h * 0.12), (w * 0.50, h * 0.90)], fill=rgba(mid, 126))
+    d.polygon([(w * 0.86, h * 0.33), (w * 0.50, h * 0.12), (w * 0.50, h * 0.90)], fill=rgba(dark, 165))
+    d.polygon([(w * 0.34, h * 0.42), (w * 0.66, h * 0.42), (w * 0.50, h * 0.56)], fill=rgba("ffffff", 92))
 
     for i in range(4):
-        x0 = w * (0.28 + i * 0.12)
-        d.line((x0, h * 0.36, x0 + 10, h * 0.86), fill=rgba("dff6ff", 120), width=2)
+        x0 = w * (0.24 + i * 0.14)
+        d.line((x0, h * 0.30, x0 + 12, h * 0.86), fill=rgba("ebfbff", 120), width=2)
 
-    add_masked_grain(img, seed=19, amount=18, dark_hex="#0f1d2d", light_hex="#edf8ff", max_alpha=26)
+    d.ellipse((w * 0.24, h * 0.22, w * 0.46, h * 0.40), fill=rgba("ffffff", 48))
+    add_masked_grain(img, seed=19 + len(tone), amount=16, dark_hex="#111a2a", light_hex="#f1fbff", max_alpha=24)
 
-    return img.filter(ImageFilter.GaussianBlur(0.25))
+    return img.filter(ImageFilter.GaussianBlur(0.18))
 
 
 def paint_artifact(size: tuple[int, int]) -> Image.Image:
@@ -382,18 +512,18 @@ def paint_dragon_body(size: tuple[int, int]) -> Image.Image:
     shell_mask = Image.new("L", size, 0)
     sd = ImageDraw.Draw(shell_mask)
 
-    outer = (12, 24, w - 8, h - 14)
-    inner = (w * 0.26, h * 0.25, w * 0.82, h * 0.78)
+    outer = (12, 20, w - 8, h - 10)
+    inner = (w * 0.31, h * 0.30, w * 0.78, h * 0.72)
     sd.ellipse(outer, fill=255)
-    sd.ellipse((w * 0.10, h * 0.35, w * 0.72, h * 0.98), fill=255)
+    sd.ellipse((w * 0.10, h * 0.38, w * 0.74, h * 0.98), fill=255)
     sd.polygon(
         [
-            (w * 0.18, h * 0.75),
-            (w * 0.34, h * 0.56),
-            (w * 0.72, h * 0.62),
-            (w * 0.94, h * 0.76),
+            (w * 0.14, h * 0.74),
+            (w * 0.34, h * 0.54),
+            (w * 0.72, h * 0.60),
+            (w * 0.96, h * 0.76),
             (w * 0.88, h * 0.92),
-            (w * 0.40, h * 0.98),
+            (w * 0.34, h * 0.98),
         ],
         fill=255,
     )
@@ -402,14 +532,14 @@ def paint_dragon_body(size: tuple[int, int]) -> Image.Image:
     ImageDraw.Draw(hollow).ellipse(tuple(int(v) for v in inner), fill=255)
     shell_mask = ImageChops.subtract(shell_mask, hollow)
 
-    # Carve an asymmetrical notch where the neck/head fold over the coil.
+    # Carve an asymmetrical notch where neck/head fold over the coil.
     carve = Image.new("L", size, 0)
     ImageDraw.Draw(carve).polygon(
         [
-            (w * 0.58, h * 0.16),
-            (w * 0.94, h * 0.24),
-            (w * 0.86, h * 0.52),
-            (w * 0.62, h * 0.44),
+            (w * 0.56, h * 0.18),
+            (w * 0.94, h * 0.26),
+            (w * 0.86, h * 0.54),
+            (w * 0.62, h * 0.46),
         ],
         fill=255,
     )
@@ -419,37 +549,51 @@ def paint_dragon_body(size: tuple[int, int]) -> Image.Image:
     for i in range(15):
         t = i / 14
         x = w * (0.06 + t * 0.76)
-        y = h * (0.80 + math.sin(i * 0.62) * 0.07)
+        y = h * (0.82 + math.sin(i * 0.62) * 0.07)
         edge_pass.ellipse((x - 10, y - 8, x + 10, y + 8), fill=255)
 
-    base = radial_glow(size, rgba("9a6a46"), rgba("140f15"), power=1.12)
+    base = radial_glow(size, rgba("cf5b1a"), rgba("3c0f0e"), power=1.05)
     img.alpha_composite(apply_mask(base, shell_mask))
 
-    underpaint = radial_glow(size, rgba("f28b52", 180), rgba("150e12", 0), power=1.45)
+    underpaint = radial_glow(size, rgba("ff8a2f", 190), rgba("8f150f", 0), power=1.35)
     ember_mask = Image.new("L", size, 0)
-    ImageDraw.Draw(ember_mask).ellipse((w * 0.20, h * 0.46, w * 0.70, h * 0.96), fill=210)
+    ImageDraw.Draw(ember_mask).ellipse((w * 0.28, h * 0.50, w * 0.72, h * 0.92), fill=205)
     img.alpha_composite(apply_mask(underpaint, ember_mask))
 
     scale_layer = Image.new("RGBA", size, (0, 0, 0, 0))
-    draw_scale_pattern(scale_layer, (20, 58, w - 16, h - 36), rgba("b78b5f"), seed=307, alpha=140)
-    add_brush_strokes(scale_layer, shell_mask, seed=313, base_hex="#6f4735", accent_hex="#d49a68", count=0)
+    draw_scale_pattern(scale_layer, (20, 52, w - 14, h - 34), rgba("f48b2e"), seed=307, alpha=142)
+    draw_scale_pattern(scale_layer, (24, 58, w - 18, h - 36), rgba("622012"), seed=311, alpha=96)
     img.alpha_composite(apply_mask(scale_layer, shell_mask))
 
-    for band in range(11):
-        t = band / 10
-        x1 = w * (0.22 + t * 0.44)
-        y1 = h * (0.66 + t * 0.16)
-        x2 = x1 + 14
-        y2 = y1 + 7
-        d.ellipse((x1, y1, x2, y2), fill=rgba("efbf8a", 70 - int(t * 28)))
+    for band in range(9):
+        t = band / 8
+        x = w * (0.30 + t * 0.34)
+        y = h * (0.56 + t * 0.25)
+        pw = 14 - t * 2.6
+        ph = 9 - t * 1.8
+        d.polygon(
+            [
+                (x - pw * 0.8, y - ph * 0.35),
+                (x + pw * 0.8, y - ph * 0.35),
+                (x + pw * 0.55, y + ph * 0.6),
+                (x, y + ph),
+                (x - pw * 0.55, y + ph * 0.6),
+            ],
+            fill=rgba("ffd27e", 94 - int(t * 24)),
+            outline=rgba("b56d2f", 102),
+        )
 
-    d.arc((w * 0.04, h * 0.06, w * 0.84, h * 0.74), 192, 346, fill=rgba("f3cb95", 156), width=8)
-    d.arc((w * 0.06, h * 0.08, w * 0.82, h * 0.72), 200, 330, fill=rgba("2d1211", 120), width=12)
+    for i in range(13):
+        x = w * (0.20 + i * 0.048)
+        y = h * (0.26 + math.sin(i * 0.45) * 0.06)
+        d.polygon([(x, y), (x + 10, y - 20), (x + 21, y)], fill=rgba("f27f2c", 132), outline=rgba("5a1a0f", 140))
 
-    add_masked_grain(img, seed=317, amount=30, dark_hex="#221310", light_hex="#f0bb80", max_alpha=58)
-    add_brush_strokes(img, shell_mask, seed=331, base_hex="#4c2c22", accent_hex="#df9b66", count=0, width_range=(2, 6))
+    d.arc((w * 0.03, h * 0.05, w * 0.84, h * 0.72), 192, 344, fill=rgba("ffd086", 150), width=8)
+    d.arc((w * 0.06, h * 0.08, w * 0.82, h * 0.72), 198, 330, fill=rgba("3b100d", 126), width=12)
 
-    return img.filter(ImageFilter.GaussianBlur(0.32))
+    add_masked_grain(img, seed=317, amount=30, dark_hex="#2a0f0d", light_hex="#ffb56d", max_alpha=56)
+
+    return img.filter(ImageFilter.GaussianBlur(0.26))
 
 
 def paint_dragon_head(size: tuple[int, int]) -> Image.Image:
@@ -461,20 +605,20 @@ def paint_dragon_head(size: tuple[int, int]) -> Image.Image:
     md = ImageDraw.Draw(mask)
     md.polygon(
         [
-            (w * 0.03, h * 0.37),
-            (w * 0.30, h * 0.16),
-            (w * 0.64, h * 0.13),
-            (w * 0.91, h * 0.29),
-            (w * 0.94, h * 0.53),
-            (w * 0.75, h * 0.76),
-            (w * 0.52, h * 0.84),
-            (w * 0.18, h * 0.77),
+            (w * 0.05, h * 0.40),
+            (w * 0.28, h * 0.16),
+            (w * 0.63, h * 0.11),
+            (w * 0.92, h * 0.30),
+            (w * 0.95, h * 0.54),
+            (w * 0.76, h * 0.76),
+            (w * 0.49, h * 0.86),
+            (w * 0.16, h * 0.76),
             (w * 0.06, h * 0.58),
         ],
         fill=255,
     )
 
-    fill = radial_glow(size, rgba("8f5c3f"), rgba("1a1118"), power=1.16)
+    fill = radial_glow(size, rgba("d75719"), rgba("2d0f10"), power=1.08)
     img.alpha_composite(apply_mask(fill, mask))
 
     shadow = Image.new("RGBA", size, (0, 0, 0, 0))
@@ -486,30 +630,39 @@ def paint_dragon_head(size: tuple[int, int]) -> Image.Image:
             (w * 0.56, h * 0.73),
             (w * 0.20, h * 0.69),
         ],
-        fill=rgba("1f0d10", 178),
+        fill=rgba("1a0708", 190),
     )
     img.alpha_composite(apply_mask(shadow, mask))
 
     brow = [
-        (w * 0.28, h * 0.28),
-        (w * 0.68, h * 0.22),
-        (w * 0.78, h * 0.29),
-        (w * 0.52, h * 0.38),
-        (w * 0.30, h * 0.34),
+        (w * 0.24, h * 0.27),
+        (w * 0.68, h * 0.21),
+        (w * 0.80, h * 0.30),
+        (w * 0.52, h * 0.40),
+        (w * 0.28, h * 0.35),
     ]
-    d.polygon(brow, fill=rgba("cc8f64", 122))
-    d.line((w * 0.12, h * 0.58, w * 0.82, h * 0.51), fill=rgba("130e11", 180), width=10)
-    d.line((w * 0.14, h * 0.56, w * 0.80, h * 0.50), fill=rgba("cb885e", 115), width=3)
+    d.polygon(brow, fill=rgba("ff9a4f", 116))
+    d.line((w * 0.11, h * 0.58, w * 0.84, h * 0.50), fill=rgba("2c0c0b", 196), width=10)
+    d.line((w * 0.13, h * 0.56, w * 0.82, h * 0.49), fill=rgba("e9873c", 118), width=3)
 
-    for idx in range(7):
-        x = w * (0.18 + idx * 0.09)
-        y = h * (0.62 - idx * 0.03)
-        d.polygon([(x, y), (x + 8, y - 18), (x + 14, y + 1)], fill=rgba("f2d7b8", 132))
+    for idx in range(9):
+        x = w * (0.12 + idx * 0.085)
+        y = h * (0.52 - idx * 0.022)
+        d.polygon([(x, y), (x + 9, y - 19), (x + 17, y)], fill=rgba("ffd8a8", 130), outline=rgba("5a2411", 130))
 
-    add_masked_grain(img, seed=353, amount=28, dark_hex="#20120f", light_hex="#dd9d72", max_alpha=64)
-    add_brush_strokes(img, mask, seed=359, base_hex="#5a3429", accent_hex="#e3a26e", count=0, width_range=(2, 6))
+    for row in range(5):
+        for col in range(5):
+            cx = w * (0.24 + col * 0.11 + row * 0.012)
+            cy = h * (0.32 + row * 0.08)
+            d.polygon(
+                [(cx - 7, cy - 5), (cx + 7, cy - 5), (cx + 5, cy + 7), (cx, cy + 10), (cx - 5, cy + 7)],
+                fill=rgba("f1792b", 95),
+                outline=rgba("4f150e", 120),
+            )
 
-    return img.filter(ImageFilter.GaussianBlur(0.26))
+    add_masked_grain(img, seed=353, amount=30, dark_hex="#260e0d", light_hex="#ef8d43", max_alpha=62)
+
+    return img.filter(ImageFilter.GaussianBlur(0.22))
 
 
 def paint_dragon_jaw(size: tuple[int, int]) -> Image.Image:
@@ -517,13 +670,13 @@ def paint_dragon_jaw(size: tuple[int, int]) -> Image.Image:
     img = Image.new("RGBA", size, (0, 0, 0, 0))
     d = ImageDraw.Draw(img, "RGBA")
     jaw = [(w * 0.05, h * 0.26), (w * 0.86, h * 0.29), (w * 0.98, h * 0.54), (w * 0.22, h * 0.78), (w * 0.04, h * 0.54)]
-    d.polygon(jaw, fill=rgba("6f4435", 255), outline=rgba("b98763", 190), width=3)
-    d.line((w * 0.18, h * 0.42, w * 0.80, h * 0.45), fill=rgba("1f0e11", 206), width=5)
-    for idx in range(4):
-        x = w * (0.20 + idx * 0.14)
-        d.polygon([(x, h * 0.57), (x + 7, h * 0.39), (x + 14, h * 0.57)], fill=rgba("e8d7c2", 150))
-    add_masked_grain(img, seed=367, amount=18, dark_hex="#26120f", light_hex="#f0c194", max_alpha=44)
-    return img.filter(ImageFilter.GaussianBlur(0.2))
+    d.polygon(jaw, fill=rgba("b04820", 255), outline=rgba("5a1d10", 196), width=3)
+    d.line((w * 0.18, h * 0.42, w * 0.82, h * 0.45), fill=rgba("1e0707", 210), width=5)
+    for idx in range(5):
+        x = w * (0.16 + idx * 0.12)
+        d.polygon([(x, h * 0.58), (x + 7, h * 0.37), (x + 15, h * 0.58)], fill=rgba("ffd6a4", 165), outline=rgba("58200f", 120))
+    add_masked_grain(img, seed=367, amount=20, dark_hex="#2b0f0d", light_hex="#ef8e43", max_alpha=42)
+    return img.filter(ImageFilter.GaussianBlur(0.16))
 
 
 def paint_dragon_tail(size: tuple[int, int]) -> Image.Image:
@@ -546,15 +699,19 @@ def paint_dragon_tail(size: tuple[int, int]) -> Image.Image:
         fill=255,
     )
 
-    base = radial_glow(size, rgba("78524a"), rgba("1a111a"), power=1.2)
+    base = radial_glow(size, rgba("cf5718"), rgba("2a0f10"), power=1.08)
     img.alpha_composite(apply_mask(base, mask))
     scale_layer = Image.new("RGBA", size, (0, 0, 0, 0))
-    draw_scale_pattern(scale_layer, (16, 48, w - 20, h - 18), rgba("b98f76"), seed=373, alpha=118)
+    draw_scale_pattern(scale_layer, (16, 48, w - 20, h - 18), rgba("f6882d"), seed=373, alpha=138)
+    draw_scale_pattern(scale_layer, (18, 50, w - 22, h - 20), rgba("5a1d12"), seed=377, alpha=85)
     img.alpha_composite(apply_mask(scale_layer, mask))
-    d.line((w * 0.20, h * 0.56, w * 0.86, h * 0.44), fill=rgba("f1c095", 84), width=5)
-    add_masked_grain(img, seed=379, amount=24, dark_hex="#221113", light_hex="#ca8d6a", max_alpha=52)
-    add_brush_strokes(img, mask, seed=383, base_hex="#5a342f", accent_hex="#c98d66", count=0, width_range=(2, 5))
-    return img.filter(ImageFilter.GaussianBlur(0.3))
+    d.line((w * 0.20, h * 0.56, w * 0.86, h * 0.44), fill=rgba("ffd28b", 84), width=5)
+    for i in range(8):
+        x = w * (0.24 + i * 0.085)
+        y = h * (0.36 + math.sin(i * 0.65) * 0.1)
+        d.polygon([(x, y), (x + 8, y - 15), (x + 16, y)], fill=rgba("f57f2c", 130), outline=rgba("53180f", 140))
+    add_masked_grain(img, seed=379, amount=24, dark_hex="#2a100d", light_hex="#ef8e46", max_alpha=50)
+    return img.filter(ImageFilter.GaussianBlur(0.24))
 
 
 def paint_dragon_wing(size: tuple[int, int]) -> Image.Image:
@@ -564,26 +721,26 @@ def paint_dragon_wing(size: tuple[int, int]) -> Image.Image:
     wing = [(w * 0.12, h * 0.94), (w * 0.88, h * 0.18), (w * 0.70, h * 0.96)]
     mask = Image.new("L", size, 0)
     ImageDraw.Draw(mask).polygon(wing, fill=255)
-    base = radial_glow(size, rgba("6f4a43"), rgba("21161d"), power=1.35)
+    base = radial_glow(size, rgba("ffb13a"), rgba("b33a13"), power=1.22)
     img.alpha_composite(apply_mask(base, mask))
 
     ribs = [(0.34, 0.80, 0.52), (0.44, 0.76, 0.58), (0.54, 0.72, 0.64), (0.64, 0.70, 0.71)]
     for x, y, topx in ribs:
-        d.line((w * x, h * 0.82, w * topx, h * y), fill=rgba("f1c090", 120), width=5)
-        d.line((w * x, h * 0.82, w * topx, h * y), fill=rgba("32161a", 110), width=2)
-    add_masked_grain(img, seed=389, amount=24, dark_hex="#210f12", light_hex="#d89d72", max_alpha=52)
-    add_brush_strokes(img, mask, seed=397, base_hex="#5d3028", accent_hex="#e2a171", count=0, width_range=(2, 6))
-    return img.filter(ImageFilter.GaussianBlur(0.26))
+        d.line((w * x, h * 0.82, w * topx, h * y), fill=rgba("ffca63", 130), width=5)
+        d.line((w * x, h * 0.82, w * topx, h * y), fill=rgba("a72e11", 145), width=3)
+    d.polygon(wing, outline=rgba("6f210f", 200), width=5)
+    add_masked_grain(img, seed=389, amount=26, dark_hex="#5a1b10", light_hex="#ffb45b", max_alpha=48)
+    return img.filter(ImageFilter.GaussianBlur(0.22))
 
 
 def paint_dragon_eye(size: tuple[int, int]) -> Image.Image:
     w, h = size
     img = Image.new("RGBA", size, (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.ellipse((w * 0.08, h * 0.18, w * 0.92, h * 0.84), fill=rgba("31222a", 255))
-    d.polygon([(w * 0.50, h * 0.18), (w * 0.72, h * 0.50), (w * 0.50, h * 0.82), (w * 0.36, h * 0.50)], fill=rgba("f4c56f", 245))
-    d.polygon([(w * 0.50, h * 0.20), (w * 0.58, h * 0.50), (w * 0.50, h * 0.80), (w * 0.44, h * 0.50)], fill=rgba("180a08", 210))
-    d.ellipse((w * 0.18, h * 0.28, w * 0.46, h * 0.46), fill=rgba("fff5d8", 80))
+    d.ellipse((w * 0.06, h * 0.14, w * 0.94, h * 0.88), fill=rgba("3a1b0f", 255))
+    d.polygon([(w * 0.08, h * 0.52), (w * 0.40, h * 0.20), (w * 0.88, h * 0.44), (w * 0.64, h * 0.78)], fill=rgba("ffcd58", 250))
+    d.polygon([(w * 0.44, h * 0.18), (w * 0.56, h * 0.48), (w * 0.48, h * 0.82), (w * 0.40, h * 0.50)], fill=rgba("1a0806", 230))
+    d.ellipse((w * 0.18, h * 0.28, w * 0.44, h * 0.46), fill=rgba("fff5d8", 94))
     return img.filter(ImageFilter.GaussianBlur(0.1))
 
 
@@ -591,24 +748,24 @@ def paint_dragon_horn(size: tuple[int, int]) -> Image.Image:
     w, h = size
     img = Image.new("RGBA", size, (0, 0, 0, 0))
     d = ImageDraw.Draw(img, "RGBA")
-    horn = [(w * 0.16, h * 0.92), (w * 0.74, h * 0.20), (w * 0.86, h * 0.09), (w * 0.60, h * 0.96)]
-    d.polygon(horn, fill=rgba("e6c89a", 245), outline=rgba("8a6235", 205), width=3)
+    horn = [(w * 0.18, h * 0.93), (w * 0.74, h * 0.20), (w * 0.88, h * 0.08), (w * 0.62, h * 0.96)]
+    d.polygon(horn, fill=rgba("f2d7ac", 248), outline=rgba("8b5d2b", 210), width=3)
     for i in range(6):
         t = i / 5
         x1 = w * (0.24 + t * 0.42)
         y1 = h * (0.84 - t * 0.56)
-        d.line((x1, y1, x1 + 20, y1 - 18), fill=rgba("9a7448", 120), width=2)
-    d.line((w * 0.32, h * 0.80, w * 0.78, h * 0.22), fill=rgba("fff1d7", 144), width=2)
-    return img.filter(ImageFilter.GaussianBlur(0.22))
+        d.line((x1, y1, x1 + 20, y1 - 18), fill=rgba("ab7b46", 126), width=2)
+    d.line((w * 0.32, h * 0.80, w * 0.78, h * 0.22), fill=rgba("fff6e3", 152), width=2)
+    return img.filter(ImageFilter.GaussianBlur(0.16))
 
 
 def paint_dragon_scales(size: tuple[int, int]) -> Image.Image:
     w, h = size
     img = Image.new("RGBA", size, (0, 0, 0, 0))
-    draw_scale_pattern(img, (6, 8, w - 6, h - 8), rgba("d2b48d"), seed=401, alpha=190)
-    draw_scale_pattern(img, (10, 12, w - 10, h - 10), rgba("5a3528"), seed=409, alpha=75)
-    add_masked_grain(img, seed=419, amount=18, dark_hex="#2a1713", light_hex="#e5b985", max_alpha=48)
-    return img.filter(ImageFilter.GaussianBlur(0.2))
+    draw_scale_pattern(img, (6, 8, w - 6, h - 8), rgba("ff8f2f"), seed=401, alpha=200)
+    draw_scale_pattern(img, (9, 12, w - 9, h - 10), rgba("5c1d12"), seed=409, alpha=88)
+    add_masked_grain(img, seed=419, amount=18, dark_hex="#3a120f", light_hex="#ffaf56", max_alpha=40)
+    return img.filter(ImageFilter.GaussianBlur(0.16))
 
 
 def paint_dragon_spines(size: tuple[int, int]) -> Image.Image:
@@ -618,14 +775,15 @@ def paint_dragon_spines(size: tuple[int, int]) -> Image.Image:
     for i in range(12):
         x = w * (0.02 + i * 0.082)
         y = h * (0.66 + math.sin(i * 0.33) * 0.1)
-        hgt = 26 + int(9 * math.sin(i * 0.9 + 0.5))
-        d.polygon([(x, y), (x + 9, y - hgt), (x + 22, y)], fill=rgba("7f5f48", 230), outline=rgba("e2c197", 145))
-    return img.filter(ImageFilter.GaussianBlur(0.2))
+        hgt = 24 + int(10 * math.sin(i * 0.9 + 0.5))
+        d.polygon([(x, y), (x + 9, y - hgt), (x + 22, y)], fill=rgba("d2571d", 235), outline=rgba("4d170f", 160))
+        d.line((x + 4, y - 2, x + 11, y - hgt + 4), fill=rgba("ffb76b", 132), width=2)
+    return img.filter(ImageFilter.GaussianBlur(0.16))
 
 
 def paint_dragon_glow(size: tuple[int, int]) -> Image.Image:
-    img = radial_glow(size, rgba("ff9d3f", 238), rgba("c01412", 0), power=1.72)
-    return img.filter(ImageFilter.GaussianBlur(10.0))
+    img = radial_glow(size, rgba("ffb54a", 238), rgba("d32112", 0), power=1.62)
+    return img.filter(ImageFilter.GaussianBlur(9.0))
 
 
 def paste_frame(atlas: Image.Image, frame: dict, image: Image.Image) -> None:
@@ -644,6 +802,16 @@ def load_frames(path: Path) -> Dict[str, dict]:
 def generate_treasure_atlas() -> None:
     frame_data = load_frames(ATLAS_DIR / "treasure-atlas.json")
     canvas = Image.new("RGBA", (2048, 670), (0, 0, 0, 0))
+    treasure_reference = load_reference_image(
+        [
+            "treasure-reference.png",
+            "treasure-reference.webp",
+            "treasure-reference.jpg",
+            "treasure-sheet.png",
+            "treasure-sheet.webp",
+            "treasure-sheet.jpg",
+        ]
+    )
 
     painters = {
         "coin": lambda size: paint_coin(size),
@@ -667,10 +835,15 @@ def generate_treasure_atlas() -> None:
     }
 
     for key, frame in frame_data.items():
-        painter = painters.get(key)
-        if not painter:
-            continue
-        img = painter((frame["w"], frame["h"]))
+        size = (frame["w"], frame["h"])
+        img = load_reference_part_file(TREASURE_PARTS_DIR, TREASURE_PART_ALIASES.get(key, (key,)), size)
+        if img is None and treasure_reference and key in TREASURE_REFERENCE_CROP_BOXES:
+            img = crop_reference_part(treasure_reference, TREASURE_REFERENCE_CROP_BOXES[key], size)
+        if img is None:
+            painter = painters.get(key)
+            if not painter:
+                continue
+            img = painter(size)
         img = clip_alpha_floor(img, alpha_floor_by_key.get(key, 0))
         paste_frame(canvas, frame, img)
 
@@ -683,6 +856,16 @@ def generate_treasure_atlas() -> None:
 def generate_dragon_atlas() -> None:
     frame_data = load_frames(ATLAS_DIR / "dragon-atlas.json")
     canvas = Image.new("RGBA", (2048, 750), (0, 0, 0, 0))
+    dragon_reference = load_reference_image(
+        [
+            "dragon-reference.png",
+            "dragon-reference.webp",
+            "dragon-reference.jpg",
+            "dragon-sheet.png",
+            "dragon-sheet.webp",
+            "dragon-sheet.jpg",
+        ]
+    )
 
     painters = {
         "dragon-body": lambda size: paint_dragon_body(size),
@@ -697,23 +880,28 @@ def generate_dragon_atlas() -> None:
         "dragon-glow": lambda size: paint_dragon_glow(size),
     }
     alpha_floor_by_key = {
-        "dragon-body": 60,
-        "dragon-head": 60,
-        "dragon-jaw": 54,
-        "dragon-tail": 58,
-        "dragon-wing": 58,
-        "dragon-eye": 32,
-        "dragon-horn": 50,
-        "dragon-scales": 58,
-        "dragon-spines": 48,
+        "dragon-body": 22,
+        "dragon-head": 20,
+        "dragon-jaw": 18,
+        "dragon-tail": 20,
+        "dragon-wing": 18,
+        "dragon-eye": 10,
+        "dragon-horn": 12,
+        "dragon-scales": 16,
+        "dragon-spines": 14,
         "dragon-glow": 0,
     }
 
     for key, frame in frame_data.items():
-        painter = painters.get(key)
-        if not painter:
-            continue
-        img = painter((frame["w"], frame["h"]))
+        size = (frame["w"], frame["h"])
+        img = load_reference_part_file(DRAGON_PARTS_DIR, DRAGON_PART_ALIASES.get(key, (key,)), size)
+        if img is None and dragon_reference and key in DRAGON_REFERENCE_CROP_BOXES:
+            img = crop_reference_part(dragon_reference, DRAGON_REFERENCE_CROP_BOXES[key], size)
+        if img is None:
+            painter = painters.get(key)
+            if not painter:
+                continue
+            img = painter(size)
         img = clip_alpha_floor(img, alpha_floor_by_key.get(key, 0))
         paste_frame(canvas, frame, img)
 

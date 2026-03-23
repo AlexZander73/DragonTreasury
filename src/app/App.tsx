@@ -135,7 +135,27 @@ export const App = () => {
   }, [unlockedItems]);
 
   const filteredItems = useMemo(() => filterItems(unlockedItems, filter), [unlockedItems, filter]);
-  const visibleItemIds = useMemo(() => new Set(filteredItems.map((item) => item.id)), [filteredItems]);
+  const filterHasDirectConstraints = useMemo(() => {
+    if (filter.query.trim().length > 0 || filter.tagQuery.trim().length > 0 || filter.featuredOnly) {
+      return true;
+    }
+    if (filter.categories.length > 0 || filter.rarities.length > 0) {
+      return true;
+    }
+    if (filter.yearFrom > yearBounds.min || filter.yearTo < yearBounds.max) {
+      return true;
+    }
+    return false;
+  }, [filter, yearBounds.max, yearBounds.min]);
+
+  const effectiveFilteredItems = useMemo(() => {
+    if (!filterHasDirectConstraints && filteredItems.length === 0 && unlockedItems.length > 0) {
+      return unlockedItems;
+    }
+    return filteredItems;
+  }, [filterHasDirectConstraints, filteredItems, unlockedItems]);
+
+  const visibleItemIds = useMemo(() => new Set(effectiveFilteredItems.map((item) => item.id)), [effectiveFilteredItems]);
 
   const selectedItem = useMemo(
     () => unlockedItems.find((item) => item.id === selectedId) ?? null,
@@ -254,7 +274,7 @@ export const App = () => {
             onBrowseModeChange={setBrowseMode}
             onResetPile={handleResetPile}
             onOpenHelp={() => setHelpOpen(true)}
-            resultCount={filteredItems.length}
+            resultCount={effectiveFilteredItems.length}
             totalCount={unlockedItems.length}
             yearBounds={yearBounds}
           />
@@ -266,7 +286,7 @@ export const App = () => {
 
         <AccessibilityList
           open={browseMode || reducedMotion}
-          items={filteredItems}
+          items={effectiveFilteredItems}
           selectedId={selectedId}
           onSelect={handleSelectFromList}
           onInspect={handleSelectFromList}
