@@ -656,14 +656,14 @@ def generate_treasure_atlas() -> None:
         "scroll-capsule": lambda size: paint_scroll(size),
     }
     alpha_floor_by_key = {
-        "coin": 64,
-        "gem": 62,
-        "artifact": 62,
+        "coin": 22,
+        "gem": 18,
+        "artifact": 16,
         "legendary-relic": 0,
-        "cursed-item": 62,
-        "metal-idol": 62,
-        "arcane-crystal": 62,
-        "scroll-capsule": 62,
+        "cursed-item": 18,
+        "metal-idol": 16,
+        "arcane-crystal": 16,
+        "scroll-capsule": 14,
     }
 
     for key, frame in frame_data.items():

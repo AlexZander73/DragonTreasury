@@ -1,4 +1,4 @@
-import { Application, Container, FederatedPointerEvent, Graphics, Sprite } from 'pixi.js';
+import { Application, BlurFilter, Container, FederatedPointerEvent, Graphics, Sprite } from 'pixi.js';
 import gsap from 'gsap';
 import type { Body } from 'matter-js';
 import type { HoardItem } from '../types/content';
@@ -13,6 +13,7 @@ import { withBase } from '../utils/basePath';
 import { clamp, lerp } from '../utils/math';
 import { rarityWeight } from '../utils/rarityStyles';
 import { DragonActor } from './DragonActor';
+import { getTreasureAtlasTexture } from './atlasTextures';
 import { ParticleSystem } from './ParticleSystem';
 import { createTreasureVisual, setTreasureVisualState, type TreasureVisual } from './TreasureVisuals';
 
@@ -155,6 +156,9 @@ const SCENE_VISUAL_ASSETS: Record<SceneTheme, SceneVisualAssets> = {
     fog: '/assets/backgrounds/ocean-fog.svg',
   },
 };
+
+const BACKDROP_PILE_COUNT = 8;
+const BACKDROP_HOARD_BLUR = new BlurFilter({ strength: 1.05, quality: 1 });
 
 export class HoardScene {
   private readonly host: HTMLDivElement;
@@ -738,6 +742,8 @@ export class HoardScene {
     midground.height = h;
     midground.alpha = 0.78;
 
+    const backdropHoard = this.createBackdropHoardDecor(w, h);
+
     const fogOverlay = Sprite.from(withBase(assets.fog));
     fogOverlay.width = w;
     fogOverlay.height = h;
@@ -758,7 +764,7 @@ export class HoardScene {
     this.hoardWarmth.blendMode = 'add';
 
     this.bgLayer.addChild(haze, backdrop, colorGrade, edgeShadow, wallGlow, farRocks, pillarOcclusion);
-    this.midLayer.addChild(midground, fog, fogOverlay, this.hoardWarmth, mound, vignetteOverlay);
+    this.midLayer.addChild(midground, backdropHoard, fog, fogOverlay, this.hoardWarmth, mound, vignetteOverlay);
 
     this.torchLight = Sprite.from(withBase('/assets/backgrounds/torch-light.svg'));
     this.torchLight.anchor.set(0.5);
@@ -779,6 +785,99 @@ export class HoardScene {
     this.edgeVeil.blendMode = 'multiply';
 
     this.overlayLayer.addChild(this.torchLight, this.foregroundMist, this.edgeVeil);
+  }
+
+  private createBackdropHoardDecor(width: number, height: number): Container {
+    const layer = new Container();
+    layer.sortableChildren = true;
+    layer.filters = [BACKDROP_HOARD_BLUR];
+    layer.alpha = 0.76;
+
+    for (let index = 0; index < BACKDROP_PILE_COUNT; index += 1) {
+      const pile = this.createBackdropPile(index, BACKDROP_PILE_COUNT, width, height);
+      layer.addChild(pile);
+    }
+
+    return layer;
+  }
+
+  private createBackdropPile(index: number, total: number, width: number, height: number): Container {
+    const pile = new Container();
+    pile.sortableChildren = true;
+
+    const spacing = (width * 0.86) / Math.max(1, total - 1);
+    const baseX = width * 0.07 + spacing * index + (Math.random() - 0.5) * width * 0.035;
+    const baseY = height * (0.26 + Math.random() * 0.2);
+    pile.position.set(baseX, baseY);
+
+    const scale = 0.74 + Math.random() * 0.24;
+    pile.scale.set(scale);
+
+    const coinTexture = getTreasureAtlasTexture('coin');
+    const gemTexture = getTreasureAtlasTexture('gem');
+    const relicTexture = getTreasureAtlasTexture('artifact');
+    const idolTexture = getTreasureAtlasTexture('metal-idol');
+    const legendaryTexture = getTreasureAtlasTexture('legendary-relic');
+
+    const coinCount = 24 + Math.floor(Math.random() * 28);
+    for (let i = 0; i < coinCount; i += 1) {
+      const coin = new Sprite(coinTexture);
+      coin.anchor.set(0.5);
+      const size = 14 + Math.random() * 26;
+      coin.width = size;
+      coin.height = size;
+      coin.position.set((Math.random() - 0.5) * 170, 18 + Math.random() * 84);
+      coin.rotation = (Math.random() - 0.5) * 0.55;
+      coin.tint = Math.random() > 0.5 ? 0xf4ce7d : 0xdca64d;
+      coin.alpha = 0.42 + Math.random() * 0.34;
+      coin.zIndex = coin.position.y;
+      pile.addChild(coin);
+    }
+
+    const sparkleCount = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < sparkleCount; i += 1) {
+      const gem = new Sprite(gemTexture);
+      gem.anchor.set(0.5);
+      const size = 22 + Math.random() * 22;
+      gem.width = size;
+      gem.height = size;
+      gem.position.set((Math.random() - 0.5) * 120, 6 + Math.random() * 62);
+      gem.rotation = (Math.random() - 0.5) * 0.36;
+      gem.tint = [0x79b9ff, 0xda5a58, 0x6ecf88, 0xab7be2][Math.floor(Math.random() * 4)];
+      gem.alpha = 0.48 + Math.random() * 0.28;
+      gem.zIndex = gem.position.y + 2;
+      pile.addChild(gem);
+    }
+
+    if (Math.random() > 0.38) {
+      const relic = new Sprite(Math.random() > 0.4 ? relicTexture : idolTexture);
+      relic.anchor.set(0.5);
+      const widthPx = 66 + Math.random() * 58;
+      const heightPx = 58 + Math.random() * 42;
+      relic.width = widthPx;
+      relic.height = heightPx;
+      relic.position.set((Math.random() - 0.5) * 78, 10 + Math.random() * 30);
+      relic.rotation = (Math.random() - 0.5) * 0.22;
+      relic.tint = 0xe9c078;
+      relic.alpha = 0.5 + Math.random() * 0.22;
+      relic.zIndex = relic.position.y + 3;
+      pile.addChild(relic);
+    }
+
+    if (Math.random() > 0.88) {
+      const relic = new Sprite(legendaryTexture);
+      relic.anchor.set(0.5);
+      relic.width = 56;
+      relic.height = 56;
+      relic.position.set((Math.random() - 0.5) * 70, 2 + Math.random() * 22);
+      relic.rotation = (Math.random() - 0.5) * 0.28;
+      relic.tint = 0xfbe2a5;
+      relic.alpha = 0.62;
+      relic.zIndex = relic.position.y + 6;
+      pile.addChild(relic);
+    }
+
+    return pile;
   }
 
   private positionDragon(): void {

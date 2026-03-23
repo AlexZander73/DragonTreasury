@@ -1,14 +1,14 @@
-# Treasure Sprite Set
+# Treasure Shapes Archive
 
-This folder ships with polished medieval-fantasy SVG sprites used at runtime:
+Legacy treasure SVG shapes were intentionally preserved and moved to:
 
-- `coin.svg`
-- `gem.svg`
-- `artifact.svg`
-- `legendary-relic.svg`
-- `cursed-item.svg`
-- `metal-idol.svg`
-- `arcane-crystal.svg`
-- `scroll-capsule.svg`
+- `public/assets/treasure/archive/coin.svg`
+- `public/assets/treasure/archive/gem.svg`
+- `public/assets/treasure/archive/artifact.svg`
+- `public/assets/treasure/archive/legendary-relic.svg`
+- `public/assets/treasure/archive/cursed-item.svg`
+- `public/assets/treasure/archive/metal-idol.svg`
+- `public/assets/treasure/archive/arcane-crystal.svg`
+- `public/assets/treasure/archive/scroll-capsule.svg`
 
-`src/scene/TreasureVisuals.ts` layers these with dynamic glints, caustics, occlusion, and soft shadow treatment.
+Current runtime treasure visuals are atlas-driven from `public/assets/atlases/treasure-atlas.png|webp` and layered in `src/scene/TreasureVisuals.ts`.

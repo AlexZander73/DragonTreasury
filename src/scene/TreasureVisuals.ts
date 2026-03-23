@@ -6,11 +6,11 @@ import { hashString } from '../utils/seededRandom';
 import { getTreasureAtlasTexture } from './atlasTextures';
 
 const raritySpriteTint: Record<Rarity, number> = {
-  common: 0xf6efe4,
-  uncommon: 0xeefff2,
-  rare: 0xeaf2ff,
-  epic: 0xf2e9ff,
-  legendary: 0xfff3d5,
+  common: 0xfff8ec,
+  uncommon: 0xfffdf4,
+  rare: 0xfafcff,
+  epic: 0xfff9ff,
+  legendary: 0xfff7e8,
 };
 
 const spriteScaleByType: Record<HoardItem['type'], { width: number; height: number }> = {
@@ -33,6 +33,17 @@ const typeGlowTint: Record<HoardItem['type'], number> = {
   'metal-idol': 0xb4bfd0,
   'arcane-crystal': 0x73d7df,
   'scroll-capsule': 0xe4c089,
+};
+
+const typeSpriteBoostTint: Record<HoardItem['type'], number> = {
+  coin: 0xffefc6,
+  gem: 0xffffff,
+  artifact: 0xf8e0b2,
+  'legendary-relic': 0xffefbd,
+  'cursed-item': 0xffd7e8,
+  'metal-idol': 0xe2d8c4,
+  'arcane-crystal': 0xd8fbff,
+  'scroll-capsule': 0xf4d8aa,
 };
 
 const SOFT_SHADOW_FILTER = new BlurFilter({ strength: 4.4, quality: 2 });
@@ -90,7 +101,7 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   sprite.anchor.set(0.5);
   sprite.width = radius * spriteScale.width;
   sprite.height = radius * spriteScale.height;
-  sprite.tint = raritySpriteTint[item.rarity];
+  sprite.tint = typeSpriteBoostTint[item.type];
   sprite.alpha = 0.97;
   sprite.zIndex = 2;
 
@@ -108,7 +119,7 @@ export const createTreasureVisual = (item: HoardItem): TreasureVisual => {
   sheen.anchor.set(0.5);
   sheen.width = sprite.width;
   sheen.height = sprite.height;
-  sheen.tint = 0xfff0d0;
+  sheen.tint = raritySpriteTint[item.rarity];
   sheen.alpha = item.type === 'metal-idol' ? 0.13 : 0.17;
   sheen.blendMode = 'screen';
   sheen.zIndex = 2.1;
