@@ -6,6 +6,7 @@ cut out atlas parts directly from your art.
 Supported filenames:
 
 - Dragon sheet:
+  - `dragonhero.png`
   - `dragon.png`
   - `dragon-reference.png`
   - `dragon-reference.webp`

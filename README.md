@@ -209,7 +209,7 @@ python3 scripts/generate_painted_atlases.py
 Optional trace-cutout mode:
 
 - Drop `dragon-reference.(png|webp|jpg)` and/or `treasure-reference.(png|webp|jpg)` into `public/assets/source/`.
-- Shortcut names are also supported: `public/assets/source/dragon.png` and `public/assets/source/booty.png`.
+- Shortcut names are also supported: `public/assets/source/dragonhero.png`, `public/assets/source/dragon.png`, and `public/assets/source/booty.png`.
 - Optional: place direct traced cutouts in `public/assets/source/dragon-parts/` and `public/assets/source/treasure-parts/` with part names from `public/assets/source/README.md`.
 - The generator prefers direct cutout files, then sheet crops, then procedural painted fallback.
 

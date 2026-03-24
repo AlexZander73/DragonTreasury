@@ -37,6 +37,19 @@ DRAGON_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
     "dragon-glow": (478, 518, 1018, 1018),
 }
 
+DRAGON_HERO_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
+    "dragon-body": (20, 126, 1012, 844),
+    "dragon-head": (44, 130, 382, 436),
+    "dragon-jaw": (176, 240, 382, 420),
+    "dragon-tail": (486, 540, 1016, 818),
+    "dragon-wing": (388, 112, 996, 520),
+    "dragon-eye": (246, 236, 288, 274),
+    "dragon-horn": (40, 108, 332, 252),
+    "dragon-scales": (52, 290, 286, 748),
+    "dragon-spines": (390, 536, 796, 690),
+    "dragon-glow": (270, 242, 448, 392),
+}
+
 TREASURE_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
     "coin": (12, 554, 109, 652),
     "gem": (246, 556, 346, 655),
@@ -137,11 +150,11 @@ def first_existing(paths: list[Path]) -> Path | None:
     return None
 
 
-def load_reference_image(candidates: list[str]) -> Image.Image | None:
+def load_reference_image(candidates: list[str]) -> tuple[Image.Image, str] | None:
     path = first_existing([SOURCE_DIR / name for name in candidates])
     if not path:
         return None
-    return Image.open(path).convert("RGBA")
+    return Image.open(path).convert("RGBA"), path.name.lower()
 
 
 def chroma_key_light_background(image: Image.Image, min_luma: int = 214, max_channel_diff: int = 22) -> Image.Image:
@@ -867,7 +880,7 @@ def load_frames(path: Path) -> Dict[str, dict]:
 def generate_treasure_atlas() -> None:
     frame_data = load_frames(ATLAS_DIR / "treasure-atlas.json")
     canvas = Image.new("RGBA", (2048, 670), (0, 0, 0, 0))
-    treasure_reference = load_reference_image(
+    treasure_reference_data = load_reference_image(
         [
             "booty.png",
             "booty.webp",
@@ -880,6 +893,7 @@ def generate_treasure_atlas() -> None:
             "treasure-sheet.jpg",
         ]
     )
+    treasure_reference = treasure_reference_data[0] if treasure_reference_data else None
 
     painters = {
         "coin": lambda size: paint_coin(size),
@@ -924,8 +938,11 @@ def generate_treasure_atlas() -> None:
 def generate_dragon_atlas() -> None:
     frame_data = load_frames(ATLAS_DIR / "dragon-atlas.json")
     canvas = Image.new("RGBA", (2048, 750), (0, 0, 0, 0))
-    dragon_reference = load_reference_image(
+    dragon_reference_data = load_reference_image(
         [
+            "dragonhero.png",
+            "dragonhero.webp",
+            "dragonhero.jpg",
             "dragon.png",
             "dragon.webp",
             "dragon.jpg",
@@ -937,6 +954,9 @@ def generate_dragon_atlas() -> None:
             "dragon-sheet.jpg",
         ]
     )
+    dragon_reference = dragon_reference_data[0] if dragon_reference_data else None
+    dragon_reference_name = dragon_reference_data[1] if dragon_reference_data else ""
+    dragon_crop_boxes = DRAGON_HERO_CROP_BOXES if "dragonhero" in dragon_reference_name else DRAGON_REFERENCE_CROP_BOXES
 
     painters = {
         "dragon-body": lambda size: paint_dragon_body(size),
@@ -969,8 +989,8 @@ def generate_dragon_atlas() -> None:
         img = load_reference_part_file(
             DRAGON_PARTS_DIR, DRAGON_PART_ALIASES.get(key, (key,)), size, largest_component=isolate
         )
-        if img is None and dragon_reference and key in DRAGON_REFERENCE_CROP_BOXES:
-            img = crop_reference_part(dragon_reference, DRAGON_REFERENCE_CROP_BOXES[key], size, largest_component=isolate)
+        if img is None and dragon_reference and key in dragon_crop_boxes:
+            img = crop_reference_part(dragon_reference, dragon_crop_boxes[key], size, largest_component=isolate)
         if img is None:
             painter = painters.get(key)
             if not painter:
