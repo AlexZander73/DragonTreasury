@@ -733,7 +733,8 @@ export class HoardScene {
     haze.rect(0, 0, w, h).fill({ color: style.hazeColor, alpha: paintedBackdrop ? style.hazeAlpha * 0.5 : style.hazeAlpha });
 
     const backdrop = Sprite.from(withBase(assets.backdrop));
-    this.fitSpriteCover(backdrop, w, h);
+    backdrop.width = w;
+    backdrop.height = h;
     backdrop.alpha = paintedBackdrop ? 0.94 : 0.97;
 
     const colorGrade = !paintedBackdrop && assets.colorGrade ? Sprite.from(withBase(assets.colorGrade)) : null;
@@ -1099,12 +1100,4 @@ export class HoardScene {
     this.dragon.setPosition(x, y);
   }
 
-  private fitSpriteCover(sprite: Sprite, width: number, height: number): void {
-    const texW = sprite.texture.orig.width || width;
-    const texH = sprite.texture.orig.height || height;
-    const scale = Math.max(width / texW, height / texH);
-    sprite.anchor.set(0.5);
-    sprite.position.set(width * 0.5, height * 0.5);
-    sprite.scale.set(scale);
-  }
 }

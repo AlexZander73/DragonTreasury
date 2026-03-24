@@ -757,7 +757,7 @@ export class DragonActor {
     }
 
     this.tail.position.set(-134, 102);
-    this.tail.scale.x = -1;
+    this.tail.scale.x = 1;
     this.wing.position.set(4, -100);
     this.body.position.set(-8, 24);
     this.bodyScales.position.set(8, -4);
@@ -765,6 +765,7 @@ export class DragonActor {
     this.neckSpines.position.set(66, -44);
     this.headBaseY = -92;
     this.head.position.set(118, this.headBaseY);
+    this.head.scale.x = 1;
     this.chestGlow.position.set(96, -18);
     this.throatShadow.position.set(108, -24);
     this.clawLeft.position.set(94, 112);
