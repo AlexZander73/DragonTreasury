@@ -756,20 +756,20 @@ export class DragonActor {
       return;
     }
 
-    this.tail.position.set(-186, 98);
+    this.tail.position.set(-134, 102);
     this.tail.scale.x = -1;
-    this.wing.position.set(10, -106);
+    this.wing.position.set(4, -100);
     this.body.position.set(-8, 24);
     this.bodyScales.position.set(8, -4);
     this.bellyPlates.position.set(98, 46);
-    this.neckSpines.position.set(78, -52);
-    this.headBaseY = -102;
-    this.head.position.set(154, this.headBaseY);
-    this.chestGlow.position.set(124, -26);
-    this.throatShadow.position.set(134, -32);
+    this.neckSpines.position.set(66, -44);
+    this.headBaseY = -92;
+    this.head.position.set(118, this.headBaseY);
+    this.chestGlow.position.set(96, -18);
+    this.throatShadow.position.set(108, -24);
     this.clawLeft.position.set(94, 112);
     this.clawRight.position.set(152, 114);
-    this.smokeOverlay.position.set(160, -108);
+    this.smokeOverlay.position.set(126, -96);
 
     this.tailLayers = this.buildLayeredPart('dragon-tail', 296, 170, 0, 0, {
       shadowOffset: { x: -8, y: 10 },
