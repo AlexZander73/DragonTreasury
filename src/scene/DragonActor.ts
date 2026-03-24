@@ -254,6 +254,8 @@ export class DragonActor {
 
   private baseX = 0;
   private baseY = 0;
+  private readonly facing = -1;
+  private headBaseY = -72;
   private jawBaseRotation = 0.05;
   private eyeLeftBase = { x: -6, y: -10 };
   private eyeRightBase = { x: 14, y: -8 };
@@ -449,7 +451,7 @@ export class DragonActor {
   }
 
   reactToStrongToss(x: number, y: number): void {
-    const targetRotation = clamp((x - this.baseX) / 260, -0.28, 0.28);
+    const targetRotation = clamp(((x - this.baseX) / 260) * this.facing, -0.28, 0.28);
     gsap.to(this.head, {
       rotation: targetRotation,
       duration: 0.2,
@@ -472,8 +474,8 @@ export class DragonActor {
     }
 
     if (Math.random() < 0.6) {
-      this.callbacks.onSmoke(this.baseX + 60, this.baseY - 88);
-      this.callbacks.onSmoke(this.baseX + 88, this.baseY - 90);
+      this.callbacks.onSmoke(this.worldX(60), this.baseY - 88);
+      this.callbacks.onSmoke(this.worldX(88), this.baseY - 90);
     }
 
     if (Math.random() < 0.28) {
@@ -497,7 +499,7 @@ export class DragonActor {
       const headTargetX = lerp(-0.1, 0.1, pointerNormX);
       const headTargetY = lerp(-0.06, 0.06, pointerNormY);
       this.head.rotation = this.head.rotation * 0.9 + headTargetX * 0.1;
-      this.head.y = this.head.y * 0.93 + (-72 + headTargetY * 18) * 0.07;
+      this.head.y = this.head.y * 0.93 + (this.headBaseY + headTargetY * 18) * 0.07;
 
       this.tail.rotation = Math.sin(now * 1.25) * 0.15;
       this.wing.rotation = Math.sin(now * 0.95) * 0.085;
@@ -590,9 +592,9 @@ export class DragonActor {
 
     if (this.smokeTimer > 3.4 + Math.random() * 4.8) {
       this.smokeTimer = 0;
-      this.callbacks.onSmoke(this.baseX + 86, this.baseY - 92);
+      this.callbacks.onSmoke(this.worldX(86), this.baseY - 92);
       if (Math.random() < 0.5) {
-        this.callbacks.onSmoke(this.baseX + 58, this.baseY - 90);
+        this.callbacks.onSmoke(this.worldX(58), this.baseY - 90);
       }
     }
 
@@ -611,7 +613,7 @@ export class DragonActor {
 
     if (this.nudgeTimer > 10 + Math.random() * 10) {
       this.nudgeTimer = 0;
-      this.callbacks.onNudgeNearby(this.baseX - 120, this.baseY + 70);
+      this.callbacks.onNudgeNearby(this.worldX(120), this.baseY + 70);
     }
 
     if (!this.reducedMotion && this.rareTimer > 18 + Math.random() * 18) {
@@ -631,6 +633,7 @@ export class DragonActor {
 
   private draw(): void {
     this.mountSpriteLayers();
+    this.container.scale.set(this.facing, 1);
 
     this.container.removeChildren();
     this.container.addChild(
@@ -650,13 +653,13 @@ export class DragonActor {
     );
 
     this.body.alpha = 0.99;
-    this.bodyScales.alpha = 0.9;
-    this.neckSpines.alpha = 0.84;
+    this.bodyScales.alpha = 0.68;
+    this.neckSpines.alpha = 0.7;
     this.head.alpha = 0.99;
     this.tail.alpha = 0.96;
-    this.wing.alpha = 0.95;
-    this.bellyPlates.alpha = 0.76;
-    this.rimLight.alpha = 0.34;
+    this.wing.alpha = 0.94;
+    this.bellyPlates.alpha = 0.62;
+    this.rimLight.alpha = 0.28;
     this.smokeOverlay.alpha = 0.6;
   }
 
@@ -708,8 +711,8 @@ export class DragonActor {
       ease: 'power1.inOut',
       onStart: () => {
         this.rimLight.alpha = 0.6;
-        this.callbacks.onSmoke(this.baseX + 92, this.baseY - 90);
-        this.callbacks.onSmoke(this.baseX + 58, this.baseY - 94);
+        this.callbacks.onSmoke(this.worldX(92), this.baseY - 90);
+        this.callbacks.onSmoke(this.worldX(58), this.baseY - 94);
       },
       onComplete: () => {
         this.rimLight.alpha = 0.36;
@@ -753,82 +756,84 @@ export class DragonActor {
       return;
     }
 
-    this.tail.position.set(-170, 84);
-    this.wing.position.set(-22, -82);
-    this.body.position.set(0, 0);
-    this.bodyScales.position.set(-1, 2);
-    this.bellyPlates.position.set(20, 36);
-    this.neckSpines.position.set(2, -66);
-    this.head.position.set(94, -72);
-    this.chestGlow.position.set(12, 24);
-    this.throatShadow.position.set(54, -22);
-    this.clawLeft.position.set(82, 86);
-    this.clawRight.position.set(114, 84);
-    this.smokeOverlay.position.set(94, -72);
+    this.tail.position.set(-112, 82);
+    this.wing.position.set(-6, -118);
+    this.body.position.set(-14, 16);
+    this.bodyScales.position.set(8, -4);
+    this.bellyPlates.position.set(92, 42);
+    this.neckSpines.position.set(74, -58);
+    this.headBaseY = -96;
+    this.head.position.set(142, this.headBaseY);
+    this.chestGlow.position.set(108, -24);
+    this.throatShadow.position.set(124, -34);
+    this.clawLeft.position.set(88, 102);
+    this.clawRight.position.set(146, 106);
+    this.smokeOverlay.position.set(144, -98);
 
-    this.tailLayers = this.buildLayeredPart('dragon-tail', 252, 160, 0, 0, {
-      shadowOffset: { x: -6, y: 10 },
-      rimOffset: { x: -2, y: -2 },
+    this.tailLayers = this.buildLayeredPart('dragon-tail', 326, 184, 0, 0, {
+      shadowOffset: { x: -8, y: 10 },
+      rimOffset: { x: -3, y: -2 },
     });
 
-    this.wingLayers = this.buildLayeredPart('dragon-wing', 244, 194, 0, 0, {
-      shadowOffset: { x: 0, y: 10 },
-      rimOffset: { x: -2, y: -4 },
+    this.wingLayers = this.buildLayeredPart('dragon-wing', 346, 254, 0, 0, {
+      shadowOffset: { x: -4, y: 8 },
+      rimOffset: { x: -2, y: -5 },
     });
 
-    this.bodyLayers = this.buildLayeredPart('dragon-body', 352, 240, 0, 0, {
-      shadowOffset: { x: -2, y: 12 },
+    this.bodyLayers = this.buildLayeredPart('dragon-body', 326, 236, 0, 0, {
+      shadowOffset: { x: -3, y: 12 },
       rimOffset: { x: -1, y: -4 },
     });
 
-    this.headLayers = this.buildLayeredPart('dragon-head', 196, 146, 0, 0, {
-      shadowOffset: { x: -3, y: 8 },
-      rimOffset: { x: -1, y: -2 },
+    this.headLayers = this.buildLayeredPart('dragon-head', 238, 196, 0, 0, {
+      shadowOffset: { x: -4, y: 8 },
+      rimOffset: { x: -2, y: -2 },
     });
 
-    this.scalesSprite = this.createSprite('dragon-scales', 206, 116, 0, 0, 0.78);
+    this.scalesSprite = this.createSprite('dragon-scales', 228, 146, 0, 0, 0.78);
     this.scalesSprite.blendMode = 'screen';
 
-    this.innerCoilSprite = this.createSprite('dragon-body', 224, 170, -16, -4, 0.62);
+    this.innerCoilSprite = this.createSprite('dragon-body', 184, 134, -24, -10, 0.4);
     this.innerCoilSprite.blendMode = 'normal';
 
-    this.bellySprite = this.createSprite('dragon-scales', 164, 82, 0, 0, 0.54);
+    this.bellySprite = this.createSprite('dragon-scales', 164, 214, -12, -6, 0.58);
     this.bellySprite.blendMode = 'screen';
 
-    this.spinesSprite = this.createSprite('dragon-spines', 178, 74, 0, 0, 0.78);
+    this.spinesSprite = this.createSprite('dragon-spines', 252, 124, 0, 0, 0.74);
 
-    this.jawSprite = this.createSprite('dragon-jaw', 126, 66, 35, 33, 0.98);
-    this.jawSprite.anchor.set(0.18, 0.26);
+    this.jawBaseRotation = 0.07;
+    this.jawSprite = this.createSprite('dragon-jaw', 136, 84, 38, 36, 0.98);
+    this.jawSprite.anchor.set(0.22, 0.28);
     this.jawSprite.rotation = this.jawBaseRotation;
 
-    this.hornLeftSprite = this.createSprite('dragon-horn', 52, 70, 58, -56, 0.96);
-    this.hornRightSprite = this.createSprite('dragon-horn', 47, 66, 80, -49, 0.92);
-    this.hornRightSprite.scale.x = -0.88;
-    this.hornRightSprite.rotation = -0.08;
+    this.hornLeftSprite = this.createSprite('dragon-horn', 84, 92, 30, -72, 0.96);
+    this.hornRightSprite = this.createSprite('dragon-horn', 74, 82, 62, -66, 0.9);
+    this.hornRightSprite.scale.x = -0.8;
+    this.hornRightSprite.rotation = -0.1;
 
     this.glowSprite = new Sprite(getDragonAtlasTexture('dragon-glow'));
     this.glowSprite.anchor.set(0.5);
-    this.glowSprite.width = 228;
-    this.glowSprite.height = 158;
-    this.glowSprite.alpha = 0.38;
+    this.glowSprite.width = 192;
+    this.glowSprite.height = 142;
+    this.glowSprite.alpha = 0.32;
     this.glowSprite.blendMode = 'add';
 
     this.emberCoreSprite = new Sprite(getEmberCoreTexture());
     this.emberCoreSprite.anchor.set(0.5);
-    this.emberCoreSprite.width = 158;
-    this.emberCoreSprite.height = 114;
-    this.emberCoreSprite.alpha = 0.6;
+    this.emberCoreSprite.width = 134;
+    this.emberCoreSprite.height = 98;
+    this.emberCoreSprite.alpha = 0.54;
     this.emberCoreSprite.blendMode = 'add';
 
     this.throatShadowSprite = new Sprite(getThroatShadowTexture());
     this.throatShadowSprite.anchor.set(0.5);
-    this.throatShadowSprite.width = 146;
-    this.throatShadowSprite.height = 96;
-    this.throatShadowSprite.alpha = 0.34;
+    this.throatShadowSprite.width = 132;
+    this.throatShadowSprite.height = 92;
+    this.throatShadowSprite.alpha = 0.28;
     this.throatShadowSprite.blendMode = 'multiply';
 
-    this.eyeLeftCore = this.createSprite('dragon-eye', 22, 12, 0, 0, 1);
-    this.eyeRightCore = this.createSprite('dragon-eye', 20, 11, 0, 0, 0.95);
+    this.eyeLeftCore = this.createSprite('dragon-eye', 24, 14, 0, 0, 1);
+    this.eyeRightCore = this.createSprite('dragon-eye', 18, 11, 0, 0, 0.72);
     this.eyeRightCore.scale.x = 0.9;
 
     this.eyeAuraLeft = new Sprite(getEyeAuraTexture());
@@ -845,9 +850,9 @@ export class DragonActor {
     this.eyeAuraRight.alpha = 0.46;
     this.eyeAuraRight.blendMode = 'add';
 
-    this.clawLeftSprite = this.createSprite('dragon-horn', 24, 28, 0, 0, 0.9);
+    this.clawLeftSprite = this.createSprite('dragon-horn', 24, 28, 0, 0, 0.22);
     this.clawLeftSprite.rotation = 2.1;
-    this.clawRightSprite = this.createSprite('dragon-horn', 22, 26, 0, 0, 0.9);
+    this.clawRightSprite = this.createSprite('dragon-horn', 22, 26, 0, 0, 0.18);
     this.clawRightSprite.rotation = 2.0;
 
     const clawLeftTip = this.createSprite('dragon-horn', 18, 22, 10, 6, 0.88);
@@ -859,7 +864,7 @@ export class DragonActor {
     this.smokeLeftSprite.anchor.set(0.5);
     this.smokeLeftSprite.width = 42;
     this.smokeLeftSprite.height = 30;
-    this.smokeLeftSprite.position.set(58, -14);
+    this.smokeLeftSprite.position.set(60, -18);
     this.smokeLeftSprite.alpha = 0.2;
     this.smokeLeftSprite.blendMode = 'screen';
 
@@ -867,10 +872,12 @@ export class DragonActor {
     this.smokeRightSprite.anchor.set(0.5);
     this.smokeRightSprite.width = 36;
     this.smokeRightSprite.height = 26;
-    this.smokeRightSprite.position.set(78, -16);
+    this.smokeRightSprite.position.set(84, -20);
     this.smokeRightSprite.alpha = 0.18;
     this.smokeRightSprite.blendMode = 'screen';
 
+    this.eyeLeftBase = { x: 18, y: -16 };
+    this.eyeRightBase = { x: 42, y: -9 };
     this.eyeLeft.position.set(this.eyeLeftBase.x, this.eyeLeftBase.y);
     this.eyeRight.position.set(this.eyeRightBase.x, this.eyeRightBase.y);
 
@@ -906,6 +913,10 @@ export class DragonActor {
     this.smokeOverlay.addChild(this.smokeLeftSprite, this.smokeRightSprite);
 
     this.spriteLayersMounted = true;
+  }
+
+  private worldX(localOffsetX: number): number {
+    return this.baseX + localOffsetX * this.facing;
   }
 
   private buildLayeredPart(

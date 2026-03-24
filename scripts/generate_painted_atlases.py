@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import math
 import random
+from collections import deque
 from pathlib import Path
 from typing import Dict, Tuple
 
@@ -24,16 +25,16 @@ TREASURE_PARTS_DIR = SOURCE_DIR / "treasure-parts"
 Color = Tuple[int, int, int, int]
 
 DRAGON_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
-    "dragon-body": (10, 330, 390, 670),
-    "dragon-head": (18, 18, 354, 404),
-    "dragon-jaw": (150, 136, 324, 282),
-    "dragon-tail": (426, 284, 1008, 676),
-    "dragon-wing": (324, 18, 1018, 410),
-    "dragon-eye": (184, 126, 252, 194),
-    "dragon-horn": (40, 8, 244, 220),
-    "dragon-scales": (430, 314, 694, 548),
-    "dragon-spines": (516, 356, 892, 566),
-    "dragon-glow": (594, 520, 1022, 1022),
+    "dragon-body": (170, 282, 404, 472),
+    "dragon-head": (26, 38, 342, 370),
+    "dragon-jaw": (174, 160, 336, 304),
+    "dragon-tail": (324, 372, 1016, 688),
+    "dragon-wing": (520, 28, 1014, 394),
+    "dragon-eye": (190, 142, 252, 204),
+    "dragon-horn": (44, 28, 286, 208),
+    "dragon-scales": (18, 420, 214, 706),
+    "dragon-spines": (328, 560, 864, 816),
+    "dragon-glow": (478, 518, 1018, 1018),
 }
 
 TREASURE_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
@@ -177,8 +178,62 @@ def trim_to_alpha_bounds(image: Image.Image, padding: int = 8) -> Image.Image:
     return rgba_img.crop((left, top, right, bottom))
 
 
-def prepare_reference_part(image: Image.Image, target_size: tuple[int, int]) -> Image.Image:
+def extract_largest_alpha_component(image: Image.Image, alpha_threshold: int = 20) -> Image.Image:
+    src = image.convert("RGBA")
+    w, h = src.size
+    alpha = src.split()[3]
+    alpha_data = list(alpha.getdata())
+    visited = bytearray(w * h)
+
+    best_component: list[int] = []
+    best_count = 0
+
+    for idx, value in enumerate(alpha_data):
+        if value <= alpha_threshold or visited[idx]:
+            continue
+        visited[idx] = 1
+        queue = deque([idx])
+        component = [idx]
+
+        while queue:
+            current = queue.popleft()
+            x = current % w
+            y = current // w
+            neighbors = (
+                current - 1 if x > 0 else None,
+                current + 1 if x < w - 1 else None,
+                current - w if y > 0 else None,
+                current + w if y < h - 1 else None,
+            )
+            for next_idx in neighbors:
+                if next_idx is None or visited[next_idx]:
+                    continue
+                visited[next_idx] = 1
+                if alpha_data[next_idx] > alpha_threshold:
+                    queue.append(next_idx)
+                    component.append(next_idx)
+
+        if len(component) > best_count:
+            best_count = len(component)
+            best_component = component
+
+    if not best_component:
+        return src
+
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    src_px = src.load()
+    out_px = out.load()
+    for idx in best_component:
+        x = idx % w
+        y = idx // w
+        out_px[x, y] = src_px[x, y]
+    return out
+
+
+def prepare_reference_part(image: Image.Image, target_size: tuple[int, int], largest_component: bool = False) -> Image.Image:
     cutout = chroma_key_light_background(image.convert("RGBA"))
+    if largest_component:
+        cutout = extract_largest_alpha_component(cutout, alpha_threshold=22)
     cutout = trim_to_alpha_bounds(cutout, padding=10)
     cutout = cutout.filter(ImageFilter.UnsharpMask(radius=1.4, percent=120, threshold=5))
 
@@ -190,12 +245,16 @@ def prepare_reference_part(image: Image.Image, target_size: tuple[int, int]) -> 
     return target
 
 
-def crop_reference_part(source: Image.Image, box: tuple[int, int, int, int], target_size: tuple[int, int]) -> Image.Image:
+def crop_reference_part(
+    source: Image.Image, box: tuple[int, int, int, int], target_size: tuple[int, int], largest_component: bool = False
+) -> Image.Image:
     crop = source.crop(box).convert("RGBA")
-    return prepare_reference_part(crop, target_size)
+    return prepare_reference_part(crop, target_size, largest_component=largest_component)
 
 
-def load_reference_part_file(part_dir: Path, aliases: tuple[str, ...], target_size: tuple[int, int]) -> Image.Image | None:
+def load_reference_part_file(
+    part_dir: Path, aliases: tuple[str, ...], target_size: tuple[int, int], largest_component: bool = False
+) -> Image.Image | None:
     candidates: list[Path] = []
     for alias in aliases:
         candidates.extend(
@@ -209,7 +268,7 @@ def load_reference_part_file(part_dir: Path, aliases: tuple[str, ...], target_si
     path = first_existing(candidates)
     if not path:
         return None
-    return prepare_reference_part(Image.open(path).convert("RGBA"), target_size)
+    return prepare_reference_part(Image.open(path).convert("RGBA"), target_size, largest_component=largest_component)
 
 
 def add_masked_grain(
@@ -906,9 +965,12 @@ def generate_dragon_atlas() -> None:
 
     for key, frame in frame_data.items():
         size = (frame["w"], frame["h"])
-        img = load_reference_part_file(DRAGON_PARTS_DIR, DRAGON_PART_ALIASES.get(key, (key,)), size)
+        isolate = key != "dragon-glow"
+        img = load_reference_part_file(
+            DRAGON_PARTS_DIR, DRAGON_PART_ALIASES.get(key, (key,)), size, largest_component=isolate
+        )
         if img is None and dragon_reference and key in DRAGON_REFERENCE_CROP_BOXES:
-            img = crop_reference_part(dragon_reference, DRAGON_REFERENCE_CROP_BOXES[key], size)
+            img = crop_reference_part(dragon_reference, DRAGON_REFERENCE_CROP_BOXES[key], size, largest_component=isolate)
         if img is None:
             painter = painters.get(key)
             if not painter:

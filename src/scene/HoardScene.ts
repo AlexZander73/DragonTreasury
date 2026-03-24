@@ -690,7 +690,7 @@ export class HoardScene {
 
     if (this.edgeVeil) {
       const veilWave = this.reducedMotion ? 1 : 0.94 + Math.sin(this.drift * 0.32) * 0.04;
-      this.edgeVeil.alpha = 0.55 * veilWave;
+      this.edgeVeil.alpha = 0.34 * veilWave;
       this.edgeVeil.x = parallaxX * 2;
       this.edgeVeil.y = parallaxY * 1.5;
     }
@@ -740,6 +740,7 @@ export class HoardScene {
     midground.width = w;
     midground.height = h;
     midground.alpha = 0.94;
+    const thematicBand = this.createThemeFeatureBand(this.sceneTheme, w, h);
 
     const backdropHoard = this.createBackdropHoardDecor(w, h);
 
@@ -767,7 +768,7 @@ export class HoardScene {
       this.bgLayer.addChild(colorGrade);
     }
     this.bgLayer.addChild(edgeShadow, wallGlow, thematicOcclusion);
-    this.midLayer.addChild(midground, backdropHoard, fog, fogOverlay, this.hoardWarmth, mound, vignetteOverlay);
+    this.midLayer.addChild(midground, thematicBand, backdropHoard, fog, fogOverlay, this.hoardWarmth, mound, vignetteOverlay);
 
     this.torchLight = Sprite.from(withBase('/assets/backgrounds/torch-light.svg'));
     this.torchLight.anchor.set(0.5);
@@ -783,7 +784,7 @@ export class HoardScene {
     this.foregroundMist.alpha = 0.29;
 
     this.edgeVeil = new Graphics();
-    this.edgeVeil.rect(0, 0, w, h).fill({ color: 0x050406, alpha: 0.54 });
+    this.edgeVeil.rect(0, 0, w, h).fill({ color: 0x050406, alpha: 0.32 });
     this.edgeVeil.ellipse(w * 0.52, h * 0.56, w * 0.44, h * 0.33).fill({ color: 0x000000, alpha: 0.1 });
     this.edgeVeil.blendMode = 'multiply';
 
@@ -853,6 +854,42 @@ export class HoardScene {
         color: 0x060408,
         alpha: 0.62,
       });
+    }
+
+    layer.addChild(g);
+    return layer;
+  }
+
+  private createThemeFeatureBand(theme: SceneTheme, width: number, height: number): Container {
+    const layer = new Container();
+    const g = new Graphics();
+
+    if (theme === 'castle') {
+      g.rect(width * 0.28, height * 0.56, width * 0.44, height * 0.06).fill({ color: 0x4d4c4b, alpha: 0.5 });
+      g.rect(width * 0.3, height * 0.49, width * 0.1, height * 0.07).fill({ color: 0x74695a, alpha: 0.4 });
+      g.rect(width * 0.6, height * 0.49, width * 0.1, height * 0.07).fill({ color: 0x6f6458, alpha: 0.4 });
+    } else if (theme === 'mountain') {
+      g.poly([width * 0.2, height * 0.7, width * 0.35, height * 0.5, width * 0.5, height * 0.7]).fill({
+        color: 0x476884,
+        alpha: 0.34,
+      });
+      g.poly([width * 0.48, height * 0.72, width * 0.64, height * 0.48, width * 0.78, height * 0.72]).fill({
+        color: 0x3d5f7a,
+        alpha: 0.32,
+      });
+    } else if (theme === 'forest') {
+      g.ellipse(width * 0.34, height * 0.64, width * 0.16, height * 0.14).fill({ color: 0x416442, alpha: 0.33 });
+      g.ellipse(width * 0.62, height * 0.62, width * 0.18, height * 0.16).fill({ color: 0x3f6642, alpha: 0.34 });
+      g.rect(width * 0.3, height * 0.62, width * 0.02, height * 0.1).fill({ color: 0x274229, alpha: 0.44 });
+      g.rect(width * 0.58, height * 0.6, width * 0.024, height * 0.12).fill({ color: 0x274229, alpha: 0.42 });
+    } else if (theme === 'ocean') {
+      g.ellipse(width * 0.45, height * 0.7, width * 0.2, height * 0.1).fill({ color: 0x3a7d94, alpha: 0.32 });
+      g.ellipse(width * 0.66, height * 0.66, width * 0.14, height * 0.09).fill({ color: 0x2f6d84, alpha: 0.34 });
+      g.rect(width * 0.27, height * 0.58, width * 0.04, height * 0.13).fill({ color: 0x29566d, alpha: 0.44 });
+      g.rect(width * 0.72, height * 0.56, width * 0.036, height * 0.14).fill({ color: 0x2b5f76, alpha: 0.42 });
+    } else {
+      g.ellipse(width * 0.46, height * 0.64, width * 0.22, height * 0.14).fill({ color: 0x6a4a31, alpha: 0.28 });
+      g.ellipse(width * 0.62, height * 0.66, width * 0.18, height * 0.12).fill({ color: 0x5d3d29, alpha: 0.26 });
     }
 
     layer.addChild(g);
