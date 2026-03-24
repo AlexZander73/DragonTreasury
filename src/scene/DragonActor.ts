@@ -653,12 +653,12 @@ export class DragonActor {
     );
 
     this.body.alpha = 0.99;
-    this.bodyScales.alpha = 0.5;
-    this.neckSpines.alpha = 0.5;
-    this.head.alpha = 0.86;
-    this.tail.alpha = 0.82;
-    this.wing.alpha = 0.8;
-    this.bellyPlates.alpha = 0.44;
+    this.bodyScales.alpha = 0.62;
+    this.neckSpines.alpha = 0.58;
+    this.head.alpha = 0.96;
+    this.tail.alpha = 0.95;
+    this.wing.alpha = 0.94;
+    this.bellyPlates.alpha = 0.52;
     this.rimLight.alpha = 0.2;
     this.smokeOverlay.alpha = 0.6;
   }
@@ -793,7 +793,7 @@ export class DragonActor {
     this.scalesSprite = this.createSprite('dragon-scales', 196, 236, 0, 0, 0.42);
     this.scalesSprite.blendMode = 'screen';
 
-    this.innerCoilSprite = this.createSprite('dragon-body', 152, 112, -22, -8, 0.18);
+    this.innerCoilSprite = this.createSprite('dragon-body', 152, 112, -22, -8, 0);
     this.innerCoilSprite.blendMode = 'normal';
 
     this.bellySprite = this.createSprite('dragon-scales', 138, 188, -10, -2, 0.24);
@@ -850,9 +850,9 @@ export class DragonActor {
     this.eyeAuraRight.alpha = 0.46;
     this.eyeAuraRight.blendMode = 'add';
 
-    this.clawLeftSprite = this.createSprite('dragon-horn', 24, 28, 0, 0, 0.22);
+    this.clawLeftSprite = this.createSprite('dragon-horn', 24, 28, 0, 0, 0);
     this.clawLeftSprite.rotation = 2.1;
-    this.clawRightSprite = this.createSprite('dragon-horn', 22, 26, 0, 0, 0.18);
+    this.clawRightSprite = this.createSprite('dragon-horn', 22, 26, 0, 0, 0);
     this.clawRightSprite.rotation = 2.0;
 
     const clawLeftTip = this.createSprite('dragon-horn', 18, 22, 10, 6, 0.88);

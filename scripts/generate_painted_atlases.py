@@ -38,16 +38,16 @@ DRAGON_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
 }
 
 DRAGON_HERO_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
-    "dragon-body": (20, 126, 1012, 844),
-    "dragon-head": (44, 130, 382, 436),
-    "dragon-jaw": (176, 240, 382, 420),
-    "dragon-tail": (486, 540, 1016, 818),
-    "dragon-wing": (388, 112, 996, 520),
+    "dragon-body": (56, 392, 612, 868),
+    "dragon-head": (28, 128, 368, 420),
+    "dragon-jaw": (176, 244, 372, 426),
+    "dragon-tail": (550, 548, 1018, 814),
+    "dragon-wing": (386, 108, 1000, 514),
     "dragon-eye": (246, 236, 288, 274),
-    "dragon-horn": (40, 108, 332, 252),
+    "dragon-horn": (40, 106, 334, 258),
     "dragon-scales": (52, 290, 286, 748),
-    "dragon-spines": (390, 536, 796, 690),
-    "dragon-glow": (270, 242, 448, 392),
+    "dragon-spines": (438, 522, 824, 692),
+    "dragon-glow": (320, 286, 474, 394),
 }
 
 TREASURE_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
