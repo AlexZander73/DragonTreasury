@@ -1,4 +1,4 @@
-export const SCENE_THEMES = ['cave', 'castle', 'mountain', 'forest', 'ocean'] as const;
+export const SCENE_THEMES = ['cave', 'castle', 'mountain', 'forest', 'ocean', 'treasury'] as const;
 export type SceneTheme = (typeof SCENE_THEMES)[number];
 
 export const SCENE_THEME_LABELS: Record<SceneTheme, string> = {
@@ -7,6 +7,7 @@ export const SCENE_THEME_LABELS: Record<SceneTheme, string> = {
   mountain: 'Mountain Summit',
   forest: 'Ancient Forest',
   ocean: 'Sunken Treasury',
+  treasury: 'Royal Treasury',
 };
 
 export const BGM_TRACKS = ['scene', 'off', 'embersong', 'courtyard', 'wilds', 'abyssal'] as const;

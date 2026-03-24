@@ -87,6 +87,14 @@ const PARTICLE_PALETTES: Record<SceneTheme, ParticlePalette> = {
     dustTint: 0xafd5e8,
     topDustTint: 0x8cbfd8,
   },
+  treasury: {
+    sparkleTint: 0xffebb3,
+    smokeTint: 0xbfa893,
+    emberWarm: 0xffbf67,
+    emberHot: 0xf57734,
+    dustTint: 0xf0dcc0,
+    topDustTint: 0xd6b997,
+  },
 };
 
 const makeRadialTexture = (size: number, inner: string, outer: string): Texture => {

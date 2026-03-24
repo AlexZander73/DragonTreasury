@@ -52,8 +52,8 @@ interface SceneVisualStyle {
 
 interface SceneVisualAssets {
   backdrop: string;
-  midground: string;
-  fog: string;
+  midground?: string;
+  fog?: string;
   colorGrade?: string;
 }
 
@@ -128,34 +128,54 @@ const SCENE_VISUAL_STYLES: Record<SceneTheme, SceneVisualStyle> = {
     vignetteAlpha: 0.68,
     groundFogColor: 0x4f9ac4,
   },
+  treasury: {
+    hazeColor: 0x090607,
+    hazeAlpha: 0.56,
+    edgeShadeColor: 0x040304,
+    edgeShadeAlpha: 0.42,
+    wallGlowMain: 0x725135,
+    wallGlowSecondary: 0x402a1d,
+    warmthColor: 0xe1aa62,
+    warmthAlpha: 0.33,
+    torchAlpha: 0.48,
+    fogAlpha: 0.58,
+    vignetteAlpha: 0.62,
+    groundFogColor: 0xa06f46,
+  },
 };
 
 const SCENE_VISUAL_ASSETS: Record<SceneTheme, SceneVisualAssets> = {
   cave: {
-    backdrop: '/assets/backgrounds/cave-backdrop.svg',
+    backdrop: '/assets/source/01_dragon_cave.png',
     midground: '/assets/backgrounds/cave-midground.svg',
     fog: '/assets/backgrounds/cave-fog.svg',
     colorGrade: '/assets/backgrounds/cave-color-grade.svg',
   },
   castle: {
-    backdrop: '/assets/backgrounds/castle-backdrop.svg',
+    backdrop: '/assets/source/02_castle_vault.png',
     midground: '/assets/backgrounds/castle-midground.svg',
     fog: '/assets/backgrounds/castle-fog.svg',
   },
   mountain: {
-    backdrop: '/assets/backgrounds/mountain-backdrop.svg',
+    backdrop: '/assets/source/03_mountain_summit.png',
     midground: '/assets/backgrounds/mountain-midground.svg',
     fog: '/assets/backgrounds/mountain-fog.svg',
   },
   forest: {
-    backdrop: '/assets/backgrounds/forest-backdrop.svg',
+    backdrop: '/assets/source/04_ancient_forest_grove.png',
     midground: '/assets/backgrounds/forest-midground.svg',
     fog: '/assets/backgrounds/forest-fog.svg',
   },
   ocean: {
-    backdrop: '/assets/backgrounds/ocean-backdrop.svg',
+    backdrop: '/assets/source/05_sunken_treasury.png',
     midground: '/assets/backgrounds/ocean-midground.svg',
     fog: '/assets/backgrounds/ocean-fog.svg',
+  },
+  treasury: {
+    backdrop: '/assets/source/06_extra_treasury_variant.png',
+    midground: '/assets/backgrounds/cave-midground.svg',
+    fog: '/assets/backgrounds/cave-fog.svg',
+    colorGrade: '/assets/backgrounds/cave-color-grade.svg',
   },
 };
 
@@ -712,7 +732,7 @@ export class HoardScene {
     const backdrop = Sprite.from(withBase(assets.backdrop));
     backdrop.width = w;
     backdrop.height = h;
-    backdrop.alpha = 0.96;
+    backdrop.alpha = 0.97;
 
     const colorGrade = assets.colorGrade ? Sprite.from(withBase(assets.colorGrade)) : null;
     if (colorGrade) {
@@ -737,18 +757,22 @@ export class HoardScene {
     const fog = new Graphics();
     fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: style.groundFogColor, alpha: 0.15 });
 
-    const midground = Sprite.from(withBase(assets.midground));
-    midground.width = w;
-    midground.height = h;
-    midground.alpha = 0.94;
+    const midground = assets.midground ? Sprite.from(withBase(assets.midground)) : null;
+    if (midground) {
+      midground.width = w;
+      midground.height = h;
+      midground.alpha = 0.8;
+    }
     const thematicBand = this.createThemeFeatureBand(this.sceneTheme, w, h);
 
     const backdropHoard = this.createBackdropHoardDecor(w, h);
 
-    const fogOverlay = Sprite.from(withBase(assets.fog));
-    fogOverlay.width = w;
-    fogOverlay.height = h;
-    fogOverlay.alpha = style.fogAlpha;
+    const fogOverlay = assets.fog ? Sprite.from(withBase(assets.fog)) : null;
+    if (fogOverlay) {
+      fogOverlay.width = w;
+      fogOverlay.height = h;
+      fogOverlay.alpha = style.fogAlpha;
+    }
 
     const vignetteOverlay = Sprite.from(withBase('/assets/backgrounds/cave-vignette.svg'));
     vignetteOverlay.width = w;
@@ -764,12 +788,19 @@ export class HoardScene {
     this.hoardWarmth.ellipse(w * 0.52, h * 0.8, w * 0.22, h * 0.09).fill({ color: style.warmthColor, alpha: style.warmthAlpha * 0.72 });
     this.hoardWarmth.blendMode = 'add';
 
-    this.bgLayer.addChild(haze, thematicBackdrop, backdrop);
+    this.bgLayer.addChild(backdrop, haze, thematicBackdrop);
     if (colorGrade) {
       this.bgLayer.addChild(colorGrade);
     }
     this.bgLayer.addChild(edgeShadow, wallGlow, thematicOcclusion);
-    this.midLayer.addChild(midground, thematicBand, backdropHoard, fog, fogOverlay, this.hoardWarmth, mound, vignetteOverlay);
+    if (midground) {
+      this.midLayer.addChild(midground);
+    }
+    this.midLayer.addChild(thematicBand, backdropHoard, fog);
+    if (fogOverlay) {
+      this.midLayer.addChild(fogOverlay);
+    }
+    this.midLayer.addChild(this.hoardWarmth, mound, vignetteOverlay);
 
     this.torchLight = Sprite.from(withBase('/assets/backgrounds/torch-light.svg'));
     this.torchLight.anchor.set(0.5);
@@ -838,6 +869,16 @@ export class HoardScene {
         alpha: 0.58,
       });
       g.ellipse(width * 0.5, height * 0.46, width * 0.22, height * 0.16).fill({ color: 0x113143, alpha: 0.26 });
+    } else if (theme === 'treasury') {
+      g.poly([0, height * 0.62, width * 0.2, height * 0.48, width * 0.34, height * 0.66, 0, height * 0.8]).fill({
+        color: 0x1c1311,
+        alpha: 0.72,
+      });
+      g.poly([width * 0.62, height * 0.58, width, height * 0.5, width, height * 0.84, width * 0.56, height * 0.8]).fill({
+        color: 0x1b120f,
+        alpha: 0.74,
+      });
+      g.ellipse(width * 0.5, height * 0.42, width * 0.28, height * 0.2).fill({ color: 0x3e2a1f, alpha: 0.32 });
     } else {
       g.poly([0, height * 0.56, width * 0.16, height * 0.45, width * 0.3, height * 0.6, 0, height * 0.72]).fill({
         color: 0x161316,
@@ -888,6 +929,11 @@ export class HoardScene {
       g.ellipse(width * 0.66, height * 0.66, width * 0.14, height * 0.09).fill({ color: 0x2f6d84, alpha: 0.34 });
       g.rect(width * 0.27, height * 0.58, width * 0.04, height * 0.13).fill({ color: 0x29566d, alpha: 0.44 });
       g.rect(width * 0.72, height * 0.56, width * 0.036, height * 0.14).fill({ color: 0x2b5f76, alpha: 0.42 });
+    } else if (theme === 'treasury') {
+      g.ellipse(width * 0.46, height * 0.66, width * 0.24, height * 0.14).fill({ color: 0x7d542f, alpha: 0.3 });
+      g.ellipse(width * 0.66, height * 0.66, width * 0.16, height * 0.11).fill({ color: 0x6e492a, alpha: 0.28 });
+      g.rect(width * 0.32, height * 0.6, width * 0.03, height * 0.12).fill({ color: 0x3b291f, alpha: 0.42 });
+      g.rect(width * 0.62, height * 0.58, width * 0.03, height * 0.12).fill({ color: 0x3b291f, alpha: 0.42 });
     } else {
       g.ellipse(width * 0.46, height * 0.64, width * 0.22, height * 0.14).fill({ color: 0x6a4a31, alpha: 0.28 });
       g.ellipse(width * 0.62, height * 0.66, width * 0.18, height * 0.12).fill({ color: 0x5d3d29, alpha: 0.26 });
@@ -924,6 +970,14 @@ export class HoardScene {
       g.ellipse(width * 0.5, height * 0.22, width * 0.28, height * 0.14).fill({ color: 0x7ee4ff, alpha: 0.14 });
       g.poly([0, height * 0.74, width * 0.16, height * 0.42, width * 0.28, height * 0.74]).fill({ color: 0x1f4e66, alpha: 0.38 });
       g.poly([width * 0.68, height * 0.72, width * 0.82, height * 0.4, width, height * 0.72]).fill({ color: 0x1a4a63, alpha: 0.38 });
+    } else if (theme === 'treasury') {
+      g.rect(0, 0, width, height).fill({ color: 0x2f1e16, alpha: 0.46 });
+      g.ellipse(width * 0.54, height * 0.26, width * 0.32, height * 0.17).fill({ color: 0xc99152, alpha: 0.18 });
+      g.poly([0, height * 0.72, width * 0.2, height * 0.48, width * 0.34, height * 0.72]).fill({ color: 0x2a1a14, alpha: 0.44 });
+      g.poly([width * 0.62, height * 0.72, width * 0.84, height * 0.46, width, height * 0.72]).fill({
+        color: 0x291914,
+        alpha: 0.44,
+      });
     } else {
       g.rect(0, 0, width, height).fill({ color: 0x2a1b16, alpha: 0.42 });
       g.ellipse(width * 0.5, height * 0.32, width * 0.28, height * 0.18).fill({ color: 0x8b603d, alpha: 0.18 });

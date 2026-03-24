@@ -80,6 +80,17 @@ const AMBIENT_PROFILES: Record<SceneTheme, AmbientProfile> = {
     noiseGain: 0.1,
     ambientGain: 0.16,
   },
+  treasury: {
+    ambientFreq: 46,
+    ambientLfoRate: 0.1,
+    ambientLfoDepth: 4.5,
+    ambientFilterType: 'lowpass',
+    ambientFilterFreq: 260,
+    noiseFilterType: 'lowpass',
+    noiseFilterFreq: 210,
+    noiseGain: 0.075,
+    ambientGain: 0.145,
+  },
 };
 
 const MUSIC_PATTERNS: Record<Exclude<BgmTrack, 'off' | 'scene'>, MusicPattern> = {
@@ -115,6 +126,7 @@ const DEFAULT_TRACK_BY_SCENE: Record<SceneTheme, Exclude<BgmTrack, 'off' | 'scen
   mountain: 'wilds',
   forest: 'wilds',
   ocean: 'abyssal',
+  treasury: 'embersong',
 };
 
 const semitoneToFreq = (semitoneOffset: number, root = 164.81): number => root * 2 ** (semitoneOffset / 12);
