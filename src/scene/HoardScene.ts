@@ -54,6 +54,7 @@ interface SceneVisualAssets {
   backdrop: string;
   midground: string;
   fog: string;
+  colorGrade?: string;
 }
 
 const SCENE_VISUAL_STYLES: Record<SceneTheme, SceneVisualStyle> = {
@@ -73,9 +74,9 @@ const SCENE_VISUAL_STYLES: Record<SceneTheme, SceneVisualStyle> = {
   },
   castle: {
     hazeColor: 0x07080b,
-    hazeAlpha: 0.77,
+    hazeAlpha: 0.5,
     edgeShadeColor: 0x030408,
-    edgeShadeAlpha: 0.56,
+    edgeShadeAlpha: 0.34,
     wallGlowMain: 0x6d5a45,
     wallGlowSecondary: 0x303746,
     warmthColor: 0xbda07b,
@@ -87,9 +88,9 @@ const SCENE_VISUAL_STYLES: Record<SceneTheme, SceneVisualStyle> = {
   },
   mountain: {
     hazeColor: 0x07090f,
-    hazeAlpha: 0.72,
+    hazeAlpha: 0.42,
     edgeShadeColor: 0x020407,
-    edgeShadeAlpha: 0.54,
+    edgeShadeAlpha: 0.3,
     wallGlowMain: 0x4e6170,
     wallGlowSecondary: 0x243a48,
     warmthColor: 0x8ca8c4,
@@ -101,9 +102,9 @@ const SCENE_VISUAL_STYLES: Record<SceneTheme, SceneVisualStyle> = {
   },
   forest: {
     hazeColor: 0x060806,
-    hazeAlpha: 0.76,
+    hazeAlpha: 0.48,
     edgeShadeColor: 0x030503,
-    edgeShadeAlpha: 0.5,
+    edgeShadeAlpha: 0.3,
     wallGlowMain: 0x496043,
     wallGlowSecondary: 0x294130,
     warmthColor: 0x83ae6c,
@@ -115,9 +116,9 @@ const SCENE_VISUAL_STYLES: Record<SceneTheme, SceneVisualStyle> = {
   },
   ocean: {
     hazeColor: 0x04080b,
-    hazeAlpha: 0.82,
+    hazeAlpha: 0.54,
     edgeShadeColor: 0x010407,
-    edgeShadeAlpha: 0.58,
+    edgeShadeAlpha: 0.34,
     wallGlowMain: 0x2b6b75,
     wallGlowSecondary: 0x1d3c4e,
     warmthColor: 0x3f9fba,
@@ -134,6 +135,7 @@ const SCENE_VISUAL_ASSETS: Record<SceneTheme, SceneVisualAssets> = {
     backdrop: '/assets/backgrounds/cave-backdrop.svg',
     midground: '/assets/backgrounds/cave-midground.svg',
     fog: '/assets/backgrounds/cave-fog.svg',
+    colorGrade: '/assets/backgrounds/cave-color-grade.svg',
   },
   castle: {
     backdrop: '/assets/backgrounds/castle-backdrop.svg',
@@ -710,12 +712,14 @@ export class HoardScene {
     const backdrop = Sprite.from(withBase(assets.backdrop));
     backdrop.width = w;
     backdrop.height = h;
-    backdrop.alpha = 0.86;
+    backdrop.alpha = 0.96;
 
-    const colorGrade = Sprite.from(withBase('/assets/backgrounds/cave-color-grade.svg'));
-    colorGrade.width = w;
-    colorGrade.height = h;
-    colorGrade.alpha = 0.8;
+    const colorGrade = assets.colorGrade ? Sprite.from(withBase(assets.colorGrade)) : null;
+    if (colorGrade) {
+      colorGrade.width = w;
+      colorGrade.height = h;
+      colorGrade.alpha = this.sceneTheme === 'cave' ? 0.78 : 0.34;
+    }
 
     const edgeShadow = new Graphics();
     edgeShadow.rect(0, 0, w, h).fill({ color: style.edgeShadeColor, alpha: style.edgeShadeAlpha });
@@ -727,21 +731,7 @@ export class HoardScene {
     wallGlow.ellipse(w * 0.76, h * 0.44, w * 0.2, h * 0.17).fill({ color: 0x3a2a22, alpha: 0.36 });
     wallGlow.ellipse(w * 0.56, h * 0.62, w * 0.26, h * 0.1).fill({ color: 0x3f2a1b, alpha: 0.22 });
 
-    const farRocks = new Graphics();
-    farRocks.poly([0, h * 0.56, w * 0.16, h * 0.45, w * 0.3, h * 0.6, 0, h * 0.72]).fill({
-      color: 0x161316,
-      alpha: 0.78,
-    });
-    farRocks.poly([w * 0.67, h * 0.52, w, h * 0.46, w, h * 0.78, w * 0.58, h * 0.76]).fill({
-      color: 0x18141a,
-      alpha: 0.82,
-    });
-
-    const pillarOcclusion = new Graphics();
-    pillarOcclusion.poly([0, h, 0, h * 0.34, w * 0.09, h * 0.24, w * 0.13, h]).fill({ color: 0x050407, alpha: 0.66 });
-    pillarOcclusion
-      .poly([w, h, w, h * 0.28, w * 0.9, h * 0.22, w * 0.86, h])
-      .fill({ color: 0x060408, alpha: 0.62 });
+    const thematicOcclusion = this.createThemeOcclusion(this.sceneTheme, w, h);
 
     const fog = new Graphics();
     fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: style.groundFogColor, alpha: 0.15 });
@@ -749,7 +739,7 @@ export class HoardScene {
     const midground = Sprite.from(withBase(assets.midground));
     midground.width = w;
     midground.height = h;
-    midground.alpha = 0.78;
+    midground.alpha = 0.94;
 
     const backdropHoard = this.createBackdropHoardDecor(w, h);
 
@@ -772,7 +762,11 @@ export class HoardScene {
     this.hoardWarmth.ellipse(w * 0.52, h * 0.8, w * 0.22, h * 0.09).fill({ color: style.warmthColor, alpha: style.warmthAlpha * 0.72 });
     this.hoardWarmth.blendMode = 'add';
 
-    this.bgLayer.addChild(haze, backdrop, colorGrade, edgeShadow, wallGlow, farRocks, pillarOcclusion);
+    this.bgLayer.addChild(haze, backdrop);
+    if (colorGrade) {
+      this.bgLayer.addChild(colorGrade);
+    }
+    this.bgLayer.addChild(edgeShadow, wallGlow, thematicOcclusion);
     this.midLayer.addChild(midground, backdropHoard, fog, fogOverlay, this.hoardWarmth, mound, vignetteOverlay);
 
     this.torchLight = Sprite.from(withBase('/assets/backgrounds/torch-light.svg'));
@@ -794,6 +788,75 @@ export class HoardScene {
     this.edgeVeil.blendMode = 'multiply';
 
     this.overlayLayer.addChild(this.torchLight, this.foregroundMist, this.edgeVeil);
+  }
+
+  private createThemeOcclusion(theme: SceneTheme, width: number, height: number): Container {
+    const layer = new Container();
+    const g = new Graphics();
+
+    if (theme === 'castle') {
+      g.rect(0, height * 0.18, width * 0.09, height).fill({ color: 0x06080b, alpha: 0.58 });
+      g.rect(width * 0.91, height * 0.16, width * 0.09, height).fill({ color: 0x06070b, alpha: 0.56 });
+      g.poly([width * 0.22, height * 0.72, width * 0.5, height * 0.38, width * 0.78, height * 0.72]).fill({
+        color: 0x0c1118,
+        alpha: 0.5,
+      });
+      g.ellipse(width * 0.5, height * 0.42, width * 0.22, height * 0.15).fill({ color: 0x121a24, alpha: 0.34 });
+    } else if (theme === 'mountain') {
+      g.poly([0, height * 0.88, width * 0.2, height * 0.52, width * 0.34, height * 0.88]).fill({
+        color: 0x08131c,
+        alpha: 0.56,
+      });
+      g.poly([width * 0.22, height * 0.9, width * 0.5, height * 0.46, width * 0.76, height * 0.9]).fill({
+        color: 0x0a1823,
+        alpha: 0.5,
+      });
+      g.poly([width * 0.62, height * 0.9, width * 0.82, height * 0.56, width, height * 0.9]).fill({
+        color: 0x091722,
+        alpha: 0.54,
+      });
+    } else if (theme === 'forest') {
+      g.poly([0, height, 0, height * 0.38, width * 0.09, height * 0.26, width * 0.15, height]).fill({
+        color: 0x050b06,
+        alpha: 0.58,
+      });
+      g.poly([width, height, width, height * 0.34, width * 0.91, height * 0.22, width * 0.85, height]).fill({
+        color: 0x050a06,
+        alpha: 0.56,
+      });
+      g.ellipse(width * 0.34, height * 0.52, width * 0.18, height * 0.14).fill({ color: 0x112119, alpha: 0.36 });
+      g.ellipse(width * 0.72, height * 0.5, width * 0.2, height * 0.16).fill({ color: 0x102118, alpha: 0.34 });
+    } else if (theme === 'ocean') {
+      g.poly([0, height, 0, height * 0.42, width * 0.12, height * 0.34, width * 0.18, height]).fill({
+        color: 0x030a12,
+        alpha: 0.6,
+      });
+      g.poly([width, height, width, height * 0.4, width * 0.9, height * 0.34, width * 0.84, height]).fill({
+        color: 0x020a12,
+        alpha: 0.58,
+      });
+      g.ellipse(width * 0.5, height * 0.46, width * 0.22, height * 0.16).fill({ color: 0x113143, alpha: 0.26 });
+    } else {
+      g.poly([0, height * 0.56, width * 0.16, height * 0.45, width * 0.3, height * 0.6, 0, height * 0.72]).fill({
+        color: 0x161316,
+        alpha: 0.78,
+      });
+      g.poly([width * 0.67, height * 0.52, width, height * 0.46, width, height * 0.78, width * 0.58, height * 0.76]).fill({
+        color: 0x18141a,
+        alpha: 0.82,
+      });
+      g.poly([0, height, 0, height * 0.34, width * 0.09, height * 0.24, width * 0.13, height]).fill({
+        color: 0x050407,
+        alpha: 0.66,
+      });
+      g.poly([width, height, width, height * 0.28, width * 0.9, height * 0.22, width * 0.86, height]).fill({
+        color: 0x060408,
+        alpha: 0.62,
+      });
+    }
+
+    layer.addChild(g);
+    return layer;
   }
 
   private createBackdropHoardDecor(width: number, height: number): Container {

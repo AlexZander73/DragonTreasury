@@ -6,13 +6,15 @@ cut out atlas parts directly from your art.
 Supported filenames:
 
 - Dragon sheet:
+  - `dragon.png`
   - `dragon-reference.png`
   - `dragon-reference.webp`
   - `dragon-reference.jpg`
   - `dragon-sheet.png`
   - `dragon-sheet.webp`
   - `dragon-sheet.jpg`
-- Treasure sheet (gems only currently):
+- Treasure sheet:
+  - `booty.png`
   - `treasure-reference.png`
   - `treasure-reference.webp`
   - `treasure-reference.jpg`

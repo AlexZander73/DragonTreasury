@@ -37,8 +37,14 @@ DRAGON_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
 }
 
 TREASURE_REFERENCE_CROP_BOXES: Dict[str, tuple[int, int, int, int]] = {
-    "gem": (394, 558, 520, 696),
-    "arcane-crystal": (454, 686, 578, 816),
+    "coin": (12, 554, 109, 652),
+    "gem": (246, 556, 346, 655),
+    "artifact": (628, 558, 785, 715),
+    "legendary-relic": (519, 827, 654, 987),
+    "cursed-item": (922, 802, 1009, 988),
+    "metal-idol": (829, 630, 945, 749),
+    "arcane-crystal": (451, 559, 530, 641),
+    "scroll-capsule": (917, 614, 1010, 788),
 }
 
 DRAGON_PART_ALIASES: Dict[str, tuple[str, ...]] = {
@@ -804,6 +810,9 @@ def generate_treasure_atlas() -> None:
     canvas = Image.new("RGBA", (2048, 670), (0, 0, 0, 0))
     treasure_reference = load_reference_image(
         [
+            "booty.png",
+            "booty.webp",
+            "booty.jpg",
             "treasure-reference.png",
             "treasure-reference.webp",
             "treasure-reference.jpg",
@@ -858,6 +867,9 @@ def generate_dragon_atlas() -> None:
     canvas = Image.new("RGBA", (2048, 750), (0, 0, 0, 0))
     dragon_reference = load_reference_image(
         [
+            "dragon.png",
+            "dragon.webp",
+            "dragon.jpg",
             "dragon-reference.png",
             "dragon-reference.webp",
             "dragon-reference.jpg",
