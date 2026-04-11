@@ -264,7 +264,7 @@ export const App = () => {
       <div className="vignette" aria-hidden="true" />
 
       <div className="ui-layer" aria-live="polite">
-        {!cleanMode ? (
+        {!cleanMode && !panelOpen ? (
           <OverlayControls
             filter={filter}
             onFilterChange={setFilter}
@@ -295,7 +295,7 @@ export const App = () => {
         ) : null}
 
         {!cleanMode ? (
-          <LorePanel item={selectedItem} open={panelOpen} onClose={() => setPanelOpen(false)} />
+          <LorePanel item={selectedItem} open={panelOpen} onClose={() => setPanelOpen(false)} dockLeft />
         ) : null}
 
         <AccessibilityList

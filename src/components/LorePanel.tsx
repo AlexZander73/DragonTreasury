@@ -7,9 +7,10 @@ interface LorePanelProps {
   item: HoardItem | null;
   open: boolean;
   onClose: () => void;
+  dockLeft?: boolean;
 }
 
-export const LorePanel = ({ item, open, onClose }: LorePanelProps) => {
+export const LorePanel = ({ item, open, onClose, dockLeft = false }: LorePanelProps) => {
   const panelRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export const LorePanel = ({ item, open, onClose }: LorePanelProps) => {
     }
 
     gsap.to(panel, {
-      xPercent: open ? 0 : 104,
+      x: open ? 0 : 24,
       autoAlpha: open ? 1 : 0,
       duration: open ? 0.52 : 0.28,
       ease: open ? 'power3.out' : 'power2.in',
@@ -40,14 +41,19 @@ export const LorePanel = ({ item, open, onClose }: LorePanelProps) => {
 
   if (!item) {
     return (
-      <aside ref={panelRef} className="panel lore-panel" aria-hidden="true">
+      <aside ref={panelRef} className={`panel lore-panel ${dockLeft ? 'dock-left' : ''}`} aria-hidden="true">
         <p className="panel-empty">Select a relic to inspect its lore.</p>
       </aside>
     );
   }
 
   return (
-    <aside ref={panelRef} className={`panel lore-panel rarity-frame-${item.rarity}`} role="dialog" aria-modal="false">
+    <aside
+      ref={panelRef}
+      className={`panel lore-panel ${dockLeft ? 'dock-left' : ''} rarity-frame-${item.rarity}`}
+      role="dialog"
+      aria-modal="false"
+    >
       <header className="lore-header">
         <div>
           <h2>{item.title}</h2>

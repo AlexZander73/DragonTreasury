@@ -153,16 +153,23 @@
 }
 
 .lore-panel {
-  position: absolute;
+  position: fixed;
   top: 0.95rem;
   right: 0.95rem;
   width: min(468px, calc(100vw - 1.9rem));
-  max-height: calc(100vh - 1.9rem);
+  max-height: calc(100dvh - 1.9rem);
   overflow: auto;
   padding: 1rem 1.02rem;
-  transform: translateX(104%);
+  transform: translateX(0);
   opacity: 0;
   pointer-events: none;
+  z-index: 22;
+}
+
+.lore-panel.dock-left {
+  left: 0.95rem;
+  right: auto;
+  width: min(392px, calc(100vw - 1.9rem));
 }
 
 .rarity-frame-common {
@@ -459,12 +466,13 @@
   }
 
   .lore-panel {
+    position: fixed;
     top: auto;
     right: 0.58rem;
     left: 0.58rem;
     bottom: 0.58rem;
     width: auto;
-    max-height: 46vh;
+    max-height: min(52dvh, calc(100dvh - 1.16rem));
   }
 
   .access-list {
