@@ -10,6 +10,18 @@ interface LorePanelProps {
   dockLeft?: boolean;
 }
 
+const sanitizeHref = (href: string): string => {
+  try {
+    const url = new URL(href);
+    if (url.hostname === 'example.com' || url.hostname.endsWith('.example.com')) {
+      return withBase('/');
+    }
+    return href;
+  } catch {
+    return href;
+  }
+};
+
 export const LorePanel = ({ item, open, onClose, dockLeft = false }: LorePanelProps) => {
   const panelRef = useRef<HTMLElement | null>(null);
 
@@ -127,21 +139,21 @@ export const LorePanel = ({ item, open, onClose, dockLeft = false }: LorePanelPr
         <ul>
           {item.links.map((link) => (
             <li key={`${link.url}-${link.label}`}>
-              <a href={link.url} target="_blank" rel="noreferrer noopener">
+              <a href={sanitizeHref(link.url)} target="_blank" rel="noreferrer noopener">
                 {link.label}
               </a>
             </li>
           ))}
           {item.repoUrl ? (
             <li>
-              <a href={item.repoUrl} target="_blank" rel="noreferrer noopener">
+              <a href={sanitizeHref(item.repoUrl)} target="_blank" rel="noreferrer noopener">
                 Source repository
               </a>
             </li>
           ) : null}
           {item.liveUrl ? (
             <li>
-              <a href={item.liveUrl} target="_blank" rel="noreferrer noopener">
+              <a href={sanitizeHref(item.liveUrl)} target="_blank" rel="noreferrer noopener">
                 Live project
               </a>
             </li>

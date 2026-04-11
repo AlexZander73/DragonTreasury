@@ -1,6 +1,7 @@
 import { Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
 import gsap from 'gsap';
 import type { DragonColorTheme } from '../types/dragon';
+import { withBase } from '../utils/basePath';
 import { clamp, lerp } from '../utils/math';
 import type { DragonAtlasFrameKey } from './atlasData';
 import { getDragonAtlasTexture } from './atlasTextures';
@@ -122,6 +123,8 @@ interface LayerSpriteSet {
   rim: Sprite;
 }
 
+const USE_HERO_DRAGON_SPRITE = true;
+
 let eyeAuraTexture: Texture | null = null;
 let emberCoreTexture: Texture | null = null;
 let smokeTexture: Texture | null = null;
@@ -236,6 +239,7 @@ export class DragonActor {
   private smokeLeftSprite: Sprite | null = null;
   private smokeRightSprite: Sprite | null = null;
   private bodyMaskShape: Graphics | null = null;
+  private heroSprite: Sprite | null = null;
 
   private spriteLayersMounted = false;
 
@@ -282,7 +286,7 @@ export class DragonActor {
         );
       }
 
-      gsap.fromTo(this.head.scale, { x: 1.035, y: 1.035 }, { x: 1, y: 1, duration: 0.35, ease: 'back.out(2)' });
+      gsap.fromTo(this.body.scale, { x: 1.03, y: 1.03 }, { x: 1, y: 1, duration: 0.35, ease: 'back.out(2)' });
 
       if (this.clickCount >= 6) {
         this.clickCount = 0;
@@ -331,6 +335,7 @@ export class DragonActor {
     this.bellySprite && (this.bellySprite.tint = style.belly);
     this.clawLeftSprite && (this.clawLeftSprite.tint = style.horns);
     this.clawRightSprite && (this.clawRightSprite.tint = style.horns);
+    this.heroSprite && (this.heroSprite.tint = style.body);
 
     if (this.glowSprite) {
       this.glowSprite.tint = style.glow;
@@ -755,6 +760,63 @@ export class DragonActor {
 
   private mountSpriteLayers(): void {
     if (this.spriteLayersMounted) {
+      return;
+    }
+
+    if (USE_HERO_DRAGON_SPRITE) {
+      this.body.position.set(-8, 22);
+      this.chestGlow.position.set(98, -18);
+      this.throatShadow.position.set(108, -24);
+      this.smokeOverlay.position.set(126, -96);
+
+      this.heroSprite = Sprite.from(withBase('/assets/source/dragonhero.png'));
+      this.heroSprite.anchor.set(0.5);
+      this.heroSprite.width = 548;
+      this.heroSprite.height = 548;
+      this.heroSprite.alpha = 0.98;
+      this.body.addChild(this.heroSprite);
+
+      this.glowSprite = new Sprite(getEmberCoreTexture());
+      this.glowSprite.anchor.set(0.5);
+      this.glowSprite.width = 176;
+      this.glowSprite.height = 124;
+      this.glowSprite.alpha = 0.32;
+      this.glowSprite.blendMode = 'add';
+
+      this.emberCoreSprite = new Sprite(getEmberCoreTexture());
+      this.emberCoreSprite.anchor.set(0.5);
+      this.emberCoreSprite.width = 112;
+      this.emberCoreSprite.height = 80;
+      this.emberCoreSprite.alpha = 0.44;
+      this.emberCoreSprite.blendMode = 'add';
+
+      this.throatShadowSprite = new Sprite(getThroatShadowTexture());
+      this.throatShadowSprite.anchor.set(0.5);
+      this.throatShadowSprite.width = 132;
+      this.throatShadowSprite.height = 92;
+      this.throatShadowSprite.alpha = 0.28;
+      this.throatShadowSprite.blendMode = 'multiply';
+
+      this.smokeLeftSprite = new Sprite(getSmokeTexture());
+      this.smokeLeftSprite.anchor.set(0.5);
+      this.smokeLeftSprite.width = 42;
+      this.smokeLeftSprite.height = 30;
+      this.smokeLeftSprite.position.set(60, -18);
+      this.smokeLeftSprite.alpha = 0.2;
+      this.smokeLeftSprite.blendMode = 'screen';
+
+      this.smokeRightSprite = new Sprite(getSmokeTexture());
+      this.smokeRightSprite.anchor.set(0.5);
+      this.smokeRightSprite.width = 36;
+      this.smokeRightSprite.height = 26;
+      this.smokeRightSprite.position.set(84, -20);
+      this.smokeRightSprite.alpha = 0.18;
+      this.smokeRightSprite.blendMode = 'screen';
+
+      this.chestGlow.addChild(this.glowSprite, this.emberCoreSprite);
+      this.throatShadow.addChild(this.throatShadowSprite);
+      this.smokeOverlay.addChild(this.smokeLeftSprite, this.smokeRightSprite);
+      this.spriteLayersMounted = true;
       return;
     }
 
