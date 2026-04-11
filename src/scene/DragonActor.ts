@@ -1,4 +1,4 @@
-import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
 import gsap from 'gsap';
 import type { DragonColorTheme } from '../types/dragon';
 import { clamp, lerp } from '../utils/math';
@@ -235,6 +235,7 @@ export class DragonActor {
   private throatShadowSprite: Sprite | null = null;
   private smokeLeftSprite: Sprite | null = null;
   private smokeRightSprite: Sprite | null = null;
+  private bodyMaskShape: Graphics | null = null;
 
   private spriteLayersMounted = false;
 
@@ -787,6 +788,15 @@ export class DragonActor {
       shadowOffset: { x: -3, y: 12 },
       rimOffset: { x: -1, y: -4 },
     });
+
+    this.bodyMaskShape = new Graphics();
+    this.bodyMaskShape.roundRect(-196, -44, 272, 216, 52).fill({ color: 0xffffff, alpha: 1 });
+    this.bodyMaskShape.ellipse(-56, -10, 122, 108).fill({ color: 0xffffff, alpha: 1 });
+    this.bodyMaskShape.roundRect(-176, -146, 146, 146, 34).fill({ color: 0xffffff, alpha: 1 });
+    this.body.addChild(this.bodyMaskShape);
+    this.bodyLayers.base.mask = this.bodyMaskShape;
+    this.bodyLayers.shadow.mask = this.bodyMaskShape;
+    this.bodyLayers.rim.mask = this.bodyMaskShape;
 
     this.headLayers = this.buildLayeredPart('dragon-head', 226, 168, 0, 0, {
       shadowOffset: { x: -4, y: 8 },
