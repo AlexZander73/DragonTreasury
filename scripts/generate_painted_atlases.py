@@ -243,8 +243,19 @@ def extract_largest_alpha_component(image: Image.Image, alpha_threshold: int = 2
     return out
 
 
+def has_significant_transparency(image: Image.Image, threshold_ratio: float = 0.08) -> bool:
+    rgba_img = image.convert("RGBA")
+    alpha = rgba_img.split()[3]
+    total = alpha.width * alpha.height
+    if total <= 0:
+        return False
+    transparent = sum(1 for value in alpha.getdata() if value < 6)
+    return (transparent / total) >= threshold_ratio
+
+
 def prepare_reference_part(image: Image.Image, target_size: tuple[int, int], largest_component: bool = False) -> Image.Image:
-    cutout = chroma_key_light_background(image.convert("RGBA"))
+    rgba_img = image.convert("RGBA")
+    cutout = rgba_img if has_significant_transparency(rgba_img) else chroma_key_light_background(rgba_img)
     if largest_component:
         cutout = extract_largest_alpha_component(cutout, alpha_threshold=22)
     cutout = trim_to_alpha_bounds(cutout, padding=10)
@@ -282,6 +293,77 @@ def load_reference_part_file(
     if not path:
         return None
     return prepare_reference_part(Image.open(path).convert("RGBA"), target_size, largest_component=largest_component)
+
+
+def find_existing_part_file(part_dir: Path, aliases: tuple[str, ...]) -> Path | None:
+    candidates: list[Path] = []
+    for alias in aliases:
+        candidates.extend(
+            (
+                part_dir / f"{alias}.png",
+                part_dir / f"{alias}.webp",
+                part_dir / f"{alias}.jpg",
+                part_dir / f"{alias}.jpeg",
+            )
+        )
+    return first_existing(candidates)
+
+
+def autoslice_dragon_sheet_parts() -> list[str]:
+    """Auto-generate per-part dragon cutouts from a separated sheet image.
+
+    This is a convenience path when users provide `dragon.png`/`dragonhero.png`
+    but haven't created `public/assets/source/dragon-parts/*.png` yet.
+    """
+    DRAGON_PARTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    sheet_data = load_reference_image(
+        [
+            "dragon.png",
+            "dragon.webp",
+            "dragon.jpg",
+            "dragonhero.png",
+            "dragonhero.webp",
+            "dragonhero.jpg",
+            "dragon-reference.png",
+            "dragon-reference.webp",
+            "dragon-reference.jpg",
+            "dragon-sheet.png",
+            "dragon-sheet.webp",
+            "dragon-sheet.jpg",
+        ]
+    )
+    if not sheet_data:
+        return []
+
+    source, source_name = sheet_data
+    crop_boxes = DRAGON_HERO_CROP_BOXES if "dragonhero" in source_name else DRAGON_REFERENCE_CROP_BOXES
+
+    generated: list[str] = []
+    for key in DRAGON_PART_ALIASES:
+        aliases = DRAGON_PART_ALIASES.get(key, (key,))
+        if find_existing_part_file(DRAGON_PARTS_DIR, aliases):
+            continue
+
+        box = crop_boxes.get(key)
+        if not box:
+            continue
+
+        part = source.crop(box).convert("RGBA")
+        part = part if has_significant_transparency(part) else chroma_key_light_background(part, min_luma=208, max_channel_diff=28)
+        if key != "dragon-glow":
+            part = extract_largest_alpha_component(part, alpha_threshold=20)
+        part = trim_to_alpha_bounds(part, padding=8)
+        part = clip_alpha_floor(part, 8 if key != "dragon-glow" else 0)
+
+        if not part.getbbox():
+            continue
+
+        out_path = DRAGON_PARTS_DIR / f"{key}.png"
+        part.save(out_path, optimize=True)
+        generated.append(key)
+
+    return generated
 
 
 def add_masked_grain(
@@ -938,6 +1020,9 @@ def generate_treasure_atlas() -> None:
 def generate_dragon_atlas() -> None:
     frame_data = load_frames(ATLAS_DIR / "dragon-atlas.json")
     canvas = Image.new("RGBA", (2048, 750), (0, 0, 0, 0))
+    generated_parts = autoslice_dragon_sheet_parts()
+    if generated_parts:
+        print(f"Auto-sliced dragon parts from sheet: {', '.join(generated_parts)}")
     dragon_reference_data = load_reference_image(
         [
             "dragonhero.png",
