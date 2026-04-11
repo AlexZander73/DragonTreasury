@@ -2,8 +2,8 @@ import type { Category, HoardItem, Rarity, Status } from '../types/content';
 import { createDefaultItem } from './mapping';
 
 const baseLinks = (slug: string) => [
-  { label: 'Design Notes', url: `https://example.com/${slug}/notes`, kind: 'doc' as const },
-  { label: 'Changelog', url: `https://example.com/${slug}/changelog`, kind: 'doc' as const },
+  { label: 'Design Notes', url: '/', kind: 'doc' as const },
+  { label: 'Changelog', url: '/', kind: 'doc' as const },
 ];
 
 const coreItems: HoardItem[] = [
@@ -22,7 +22,7 @@ const coreItems: HoardItem[] = [
     repoUrl: 'https://github.com/AlexZander73/DragonTreasury',
     links: [
       { label: 'Repository', url: 'https://github.com/AlexZander73/DragonTreasury', kind: 'repo' },
-      { label: 'Vision Brief', url: 'https://example.com/dragon-treasury/brief', kind: 'doc' },
+      { label: 'Vision Brief', url: '/', kind: 'doc' },
     ],
     images: [{ src: '/assets/ui/placeholder-hero.svg', alt: 'Glowing dragon cave concept art' }],
     whyItMatters: 'This is the personal mythology layer over years of practical building work.',
@@ -43,8 +43,7 @@ const coreItems: HoardItem[] = [
     tags: ['fintech', 'visualization', 'ops'],
     techStack: ['React', 'Node', 'PostgreSQL'],
     links: baseLinks('auric-ledger'),
-    repoUrl: 'https://github.com/example/auric-ledger',
-    liveUrl: 'https://example.com/auric-ledger',
+    liveUrl: '/',
     whyItMatters: 'First serious attempt at shipping a tool with a clear pricing model.',
     featured: true,
     dragonAffinity: 0.62,
@@ -245,7 +244,7 @@ const coreItems: HoardItem[] = [
     year: 2017,
     tags: ['secret', 'easter-egg', 'legend'],
     techStack: ['Mystery'],
-    links: [{ label: 'Whispered Lore', url: 'https://example.com/ember-crown/lore', kind: 'doc' }],
+    links: [{ label: 'Whispered Lore', url: '/', kind: 'doc' }],
     whyItMatters: 'A reminder that delight is a product feature, not a garnish.',
     visualHint: 'Burning crown relic with prismatic embers.',
     dragonAffinity: 1,
@@ -580,7 +579,7 @@ const generatedItems: HoardItem[] = experimentNames.map((name, index) => {
     year,
     tags: [category, rarity, year.toString(), 'seed'],
     techStack: ['TypeScript', 'Static Data'],
-    links: [{ label: 'Placeholder Notes', url: `https://example.com/${slug}`, kind: 'doc' }],
+    links: [{ label: 'Placeholder Notes', url: '/', kind: 'doc' }],
     notes: 'Generated seed entry; safe to overwrite with real content.',
     visualHint: 'Generated relic texture with subtle engravings.',
     featured: index % 9 === 0,
