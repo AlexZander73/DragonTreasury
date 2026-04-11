@@ -1,4 +1,4 @@
-import { Container, Sprite, Texture } from 'pixi.js';
+import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import gsap from 'gsap';
 import type { DragonColorTheme } from '../types/dragon';
 import { clamp, lerp } from '../utils/math';
@@ -267,6 +267,7 @@ export class DragonActor {
 
     this.container.sortableChildren = true;
     this.container.eventMode = 'static';
+    this.container.hitArea = new Rectangle(-6, -188, 210, 178);
     this.container.cursor = 'pointer';
     this.container.on('pointerdown', () => {
       this.clickCount += 1;

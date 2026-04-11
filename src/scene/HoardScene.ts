@@ -266,12 +266,20 @@ export class HoardScene {
     this.app.stage.hitArea = this.app.screen;
 
     this.world.sortableChildren = true;
+    this.world.eventMode = 'passive';
     this.bgLayer.zIndex = 0;
     this.midLayer.zIndex = 1;
     this.treasureLayer.zIndex = 2;
     this.dragonLayer.zIndex = 3;
     this.fxLayer.zIndex = 4;
     this.overlayLayer.zIndex = 5;
+
+    this.bgLayer.eventMode = 'none';
+    this.midLayer.eventMode = 'none';
+    this.fxLayer.eventMode = 'none';
+    this.overlayLayer.eventMode = 'none';
+    this.dragonLayer.eventMode = 'passive';
+    this.treasureLayer.eventMode = 'passive';
 
     this.world.addChild(this.bgLayer, this.midLayer, this.treasureLayer, this.dragonLayer, this.fxLayer, this.overlayLayer);
     this.app.stage.addChild(this.world);
