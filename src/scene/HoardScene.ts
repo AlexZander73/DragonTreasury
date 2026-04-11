@@ -412,8 +412,14 @@ export class HoardScene {
   }
 
   setItems(items: HoardItem[]): void {
+    const previousItemCount = this.itemsById.size;
     this.itemsById = new Map(items.map((item) => [item.id, item]));
     if (!this.visibilitySynced && this.visibleItemIds.size === 0 && items.length > 0) {
+      this.visibleItemIds = new Set(items.map((item) => item.id));
+    }
+    if (this.visibilitySynced && this.visibleItemIds.size === 0 && previousItemCount === 0 && items.length > 0) {
+      // Startup race guard: if visibility was synced while content was empty, default to showing all
+      // first loaded items so the pile appears on initial load without requiring a manual reset.
       this.visibleItemIds = new Set(items.map((item) => item.id));
     }
 
