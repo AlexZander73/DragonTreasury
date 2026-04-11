@@ -24,6 +24,7 @@ const FLAVOR_LINES = [
 
 export const App = () => {
   const sceneRef = useRef<HoardCanvasHandle | null>(null);
+  const bootResetDoneRef = useRef(false);
 
   const systemReducedMotion = usePrefersReducedMotion();
   const [allItems, setAllItems] = useState<HoardItem[]>([]);
@@ -198,6 +199,19 @@ export const App = () => {
       window.removeEventListener('keydown', handleFirstInteraction);
     };
   }, []);
+
+  useEffect(() => {
+    if (!sceneLoaded || unlockedItems.length === 0 || bootResetDoneRef.current) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      sceneRef.current?.resetPile();
+      bootResetDoneRef.current = true;
+    }, 420);
+
+    return () => window.clearTimeout(timer);
+  }, [sceneLoaded, unlockedItems.length]);
 
   const handleSelectFromScene = (payload: { itemId: string; inspect: boolean }): void => {
     setSelectedId(payload.itemId);
