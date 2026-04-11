@@ -757,15 +757,15 @@ export class DragonActor {
       return;
     }
 
-    this.tail.position.set(-182, 74);
+    this.tail.position.set(-88, 68);
     this.tail.scale.x = 1;
-    this.wing.position.set(4, -130);
+    this.wing.position.set(4, -128);
     this.body.position.set(-8, 24);
     this.bodyScales.position.set(8, -4);
     this.bellyPlates.position.set(98, 46);
     this.neckSpines.position.set(66, -44);
-    this.headBaseY = -118;
-    this.head.position.set(150, this.headBaseY);
+    this.headBaseY = -112;
+    this.head.position.set(96, this.headBaseY);
     this.head.scale.x = 1;
     this.chestGlow.position.set(96, -18);
     this.throatShadow.position.set(108, -24);
