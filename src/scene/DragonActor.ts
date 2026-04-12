@@ -240,7 +240,6 @@ export class DragonActor {
   private smokeRightSprite: Sprite | null = null;
   private bodyMaskShape: Graphics | null = null;
   private heroSprite: Sprite | null = null;
-  private heroFallbackSprite: Sprite | null = null;
 
   private spriteLayersMounted = false;
 
@@ -338,7 +337,6 @@ export class DragonActor {
     this.clawRightSprite && (this.clawRightSprite.tint = style.horns);
     // Keep hero sprite untinted to avoid darkening/disappearing against cave backdrops.
     this.heroSprite && (this.heroSprite.tint = 0xffffff);
-    this.heroFallbackSprite && (this.heroFallbackSprite.tint = style.body);
 
     if (this.glowSprite) {
       this.glowSprite.tint = style.glow;
@@ -771,14 +769,6 @@ export class DragonActor {
       this.chestGlow.position.set(98, -18);
       this.throatShadow.position.set(108, -24);
       this.smokeOverlay.position.set(126, -96);
-
-      this.heroFallbackSprite = new Sprite(getDragonAtlasTexture('dragon-body'));
-      this.heroFallbackSprite.anchor.set(0.5);
-      this.heroFallbackSprite.width = 430;
-      this.heroFallbackSprite.height = 316;
-      this.heroFallbackSprite.alpha = 0.34;
-      this.heroFallbackSprite.tint = 0xffffff;
-      this.body.addChild(this.heroFallbackSprite);
 
       this.heroSprite = Sprite.from(withBase('/assets/source/dragonhero.png'));
       this.heroSprite.anchor.set(0.5);
