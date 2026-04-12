@@ -772,8 +772,8 @@ export class DragonActor {
 
       this.heroSprite = Sprite.from(withBase('/assets/source/dragonhero.png'));
       this.heroSprite.anchor.set(0.5);
-      this.heroSprite.width = 548;
-      this.heroSprite.height = 548;
+      // Use scale (not width/height) so async texture load does not blow up sizing.
+      this.heroSprite.scale.set(0.535);
       this.heroSprite.alpha = 0.98;
       this.body.addChild(this.heroSprite);
 
