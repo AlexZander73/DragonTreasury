@@ -3,7 +3,7 @@
   top: 0.95rem;
   left: 0.95rem;
   width: min(392px, calc(100vw - 1.9rem));
-  max-height: calc(100vh - 1.9rem);
+  max-height: calc(100dvh - 1.9rem);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
@@ -13,6 +13,7 @@
   pointer-events: auto;
   display: grid;
   gap: 0.78rem;
+  z-index: 24;
 }
 
 .controls-header h1 {
@@ -155,10 +156,12 @@
 .lore-panel {
   position: fixed;
   top: 0.95rem;
+  bottom: 0.95rem;
   right: 0.95rem;
   width: min(468px, calc(100vw - 1.9rem));
-  max-height: calc(100dvh - 1.9rem);
-  overflow: auto;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1rem 1.02rem;
   transform: translateX(0);
   opacity: 0;

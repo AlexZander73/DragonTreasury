@@ -229,6 +229,7 @@ export class HoardScene {
   private dragState: DragState | null = null;
   private drift = 0;
   private hidden = false;
+  private paintedBackdropActive = false;
 
   constructor(options: HoardSceneOptions) {
     this.host = options.host;
@@ -393,6 +394,14 @@ export class HoardScene {
   }
 
   setVisibleItems(ids: Set<string>): void {
+    if (!this.visibilitySynced && ids.size === 0 && this.itemsById.size > 0) {
+      // Guard initial sync races where visibility can arrive as an empty set
+      // before filter state settles; keep first paint populated.
+      this.visibleItemIds = new Set(this.itemsById.keys());
+      this.visibilitySynced = true;
+      return;
+    }
+
     this.visibleItemIds = new Set(ids);
     this.visibilitySynced = true;
   }
@@ -663,8 +672,9 @@ export class HoardScene {
     this.drift += dt;
     this.physics.update(dt * 1000);
 
-    const sceneW = this.host.clientWidth;
-    const sceneH = this.host.clientHeight;
+    const size = this.getHostSize();
+    const sceneW = size.width;
+    const sceneH = size.height;
 
     for (const [id, entity] of this.entities.entries()) {
       const body = entity.body;
@@ -715,12 +725,14 @@ export class HoardScene {
       this.torchLight.x = lerp(this.torchLight.x, targetX, 0.06);
       this.torchLight.y = lerp(this.torchLight.y, targetY, 0.06);
       const pulse = this.reducedMotion ? 0.9 : 0.85 + Math.sin(this.drift * 2.6) * 0.08;
-      this.torchLight.alpha = style.torchAlpha * pulse;
+      const paintedMult = this.paintedBackdropActive ? 0.72 : 1;
+      this.torchLight.alpha = style.torchAlpha * pulse * paintedMult;
     }
 
     if (this.foregroundMist) {
       const mistPulse = this.reducedMotion ? 0.9 : 0.82 + Math.sin(this.drift * 0.7) * 0.08;
-      this.foregroundMist.alpha = 0.28 * mistPulse;
+      const mistBase = this.paintedBackdropActive ? 0.18 : 0.28;
+      this.foregroundMist.alpha = mistBase * mistPulse;
       this.foregroundMist.x = parallaxX * -8;
       this.foregroundMist.y = parallaxY * -5;
     }
@@ -728,12 +740,14 @@ export class HoardScene {
     if (this.hoardWarmth) {
       const style = SCENE_VISUAL_STYLES[this.sceneTheme];
       const warmthPulse = this.reducedMotion ? 0.9 : 0.84 + Math.sin(this.drift * 1.15) * 0.11;
-      this.hoardWarmth.alpha = style.warmthAlpha * warmthPulse;
+      const warmthMult = this.paintedBackdropActive ? 0.7 : 1;
+      this.hoardWarmth.alpha = style.warmthAlpha * warmthPulse * warmthMult;
     }
 
     if (this.edgeVeil) {
       const veilWave = this.reducedMotion ? 1 : 0.94 + Math.sin(this.drift * 0.32) * 0.04;
-      this.edgeVeil.alpha = 0.34 * veilWave;
+      const veilBase = this.paintedBackdropActive ? 0.2 : 0.34;
+      this.edgeVeil.alpha = veilBase * veilWave;
       this.edgeVeil.x = parallaxX * 2;
       this.edgeVeil.y = parallaxY * 1.5;
     }
@@ -744,66 +758,71 @@ export class HoardScene {
     this.midLayer.removeChildren();
     this.overlayLayer.removeChildren();
 
-    const w = this.host.clientWidth;
-    const h = this.host.clientHeight;
+    const size = this.getHostSize();
+    const w = size.width;
+    const h = size.height;
     const style = SCENE_VISUAL_STYLES[this.sceneTheme];
     const assets = SCENE_VISUAL_ASSETS[this.sceneTheme];
     const paintedBackdrop = isPaintedBackdropPath(assets.backdrop);
+    this.paintedBackdropActive = paintedBackdrop;
+    const paintShadeMult = paintedBackdrop ? 0.34 : 1;
+    const paintAccentMult = paintedBackdrop ? 0.42 : 1;
 
     const haze = new Graphics();
-    haze.rect(0, 0, w, h).fill({ color: style.hazeColor, alpha: paintedBackdrop ? style.hazeAlpha * 0.5 : style.hazeAlpha });
+    haze.rect(0, 0, w, h).fill({ color: style.hazeColor, alpha: style.hazeAlpha * paintShadeMult });
 
     const backdrop = Sprite.from(withBase(assets.backdrop));
     backdrop.width = w;
     backdrop.height = h;
-    backdrop.alpha = paintedBackdrop ? 0.94 : 0.97;
+    backdrop.alpha = paintedBackdrop ? 1 : 0.97;
 
-    const colorGrade = !paintedBackdrop && assets.colorGrade ? Sprite.from(withBase(assets.colorGrade)) : null;
+    const colorGrade = assets.colorGrade ? Sprite.from(withBase(assets.colorGrade)) : null;
     if (colorGrade) {
       colorGrade.width = w;
       colorGrade.height = h;
-      colorGrade.alpha = this.sceneTheme === 'cave' ? 0.78 : 0.34;
+      colorGrade.alpha = paintedBackdrop ? 0.16 : this.sceneTheme === 'cave' ? 0.78 : 0.34;
     }
 
     const edgeShadow = new Graphics();
-    edgeShadow.rect(0, 0, w, h).fill({ color: style.edgeShadeColor, alpha: paintedBackdrop ? style.edgeShadeAlpha * 0.55 : style.edgeShadeAlpha });
-    edgeShadow.ellipse(w * 0.5, h * 0.55, w * 0.46, h * 0.34).fill({ color: 0x000000, alpha: paintedBackdrop ? 0.08 : 0.14 });
+    edgeShadow.rect(0, 0, w, h).fill({ color: style.edgeShadeColor, alpha: style.edgeShadeAlpha * paintAccentMult });
+    edgeShadow.ellipse(w * 0.5, h * 0.55, w * 0.46, h * 0.34).fill({ color: 0x000000, alpha: paintedBackdrop ? 0.06 : 0.14 });
 
     const wallGlow = new Graphics();
-    wallGlow.ellipse(w * 0.5, h * 0.33, w * 0.42, h * 0.28).fill({ color: style.wallGlowMain, alpha: paintedBackdrop ? 0.2 : 0.36 });
-    wallGlow.ellipse(w * 0.25, h * 0.48, w * 0.23, h * 0.2).fill({ color: style.wallGlowSecondary, alpha: paintedBackdrop ? 0.24 : 0.44 });
-    wallGlow.ellipse(w * 0.76, h * 0.44, w * 0.2, h * 0.17).fill({ color: 0x3a2a22, alpha: paintedBackdrop ? 0.2 : 0.36 });
-    wallGlow.ellipse(w * 0.56, h * 0.62, w * 0.26, h * 0.1).fill({ color: 0x3f2a1b, alpha: paintedBackdrop ? 0.12 : 0.22 });
+    wallGlow.ellipse(w * 0.5, h * 0.33, w * 0.42, h * 0.28).fill({ color: style.wallGlowMain, alpha: paintedBackdrop ? 0.14 : 0.36 });
+    wallGlow.ellipse(w * 0.25, h * 0.48, w * 0.23, h * 0.2).fill({ color: style.wallGlowSecondary, alpha: paintedBackdrop ? 0.18 : 0.44 });
+    wallGlow.ellipse(w * 0.76, h * 0.44, w * 0.2, h * 0.17).fill({ color: 0x3a2a22, alpha: paintedBackdrop ? 0.14 : 0.36 });
+    wallGlow.ellipse(w * 0.56, h * 0.62, w * 0.26, h * 0.1).fill({ color: 0x3f2a1b, alpha: paintedBackdrop ? 0.08 : 0.22 });
 
     const thematicOcclusion = this.createThemeOcclusion(this.sceneTheme, w, h);
-    thematicOcclusion.alpha = paintedBackdrop ? 0.52 : 1;
+    thematicOcclusion.alpha = paintedBackdrop ? 0.2 : 1;
     const thematicBackdrop = this.createThemeBackdropPaint(this.sceneTheme, w, h);
-    thematicBackdrop.alpha = paintedBackdrop ? 0.42 : 1;
+    thematicBackdrop.alpha = paintedBackdrop ? 0.08 : 1;
 
     const fog = new Graphics();
-    fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: style.groundFogColor, alpha: paintedBackdrop ? 0.1 : 0.15 });
+    fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: style.groundFogColor, alpha: paintedBackdrop ? 0.07 : 0.15 });
 
-    const midground = !paintedBackdrop && assets.midground ? Sprite.from(withBase(assets.midground)) : null;
+    const midground = assets.midground ? Sprite.from(withBase(assets.midground)) : null;
     if (midground) {
       midground.width = w;
       midground.height = h;
-      midground.alpha = 0.8;
+      midground.alpha = paintedBackdrop ? 0.16 : 0.8;
     }
     const thematicBand = this.createThemeFeatureBand(this.sceneTheme, w, h);
+    thematicBand.alpha = paintedBackdrop ? 0.24 : 1;
 
     const backdropHoard = this.createBackdropHoardDecor(w, h);
 
-    const fogOverlay = !paintedBackdrop && assets.fog ? Sprite.from(withBase(assets.fog)) : null;
+    const fogOverlay = assets.fog ? Sprite.from(withBase(assets.fog)) : null;
     if (fogOverlay) {
       fogOverlay.width = w;
       fogOverlay.height = h;
-      fogOverlay.alpha = style.fogAlpha;
+      fogOverlay.alpha = paintedBackdrop ? style.fogAlpha * 0.28 : style.fogAlpha;
     }
 
     const vignetteOverlay = Sprite.from(withBase('/assets/backgrounds/cave-vignette.svg'));
     vignetteOverlay.width = w;
     vignetteOverlay.height = h;
-    vignetteOverlay.alpha = paintedBackdrop ? style.vignetteAlpha * 0.72 : style.vignetteAlpha;
+    vignetteOverlay.alpha = paintedBackdrop ? style.vignetteAlpha * 0.54 : style.vignetteAlpha;
 
     const mound = new Graphics();
     mound.ellipse(w * 0.5, h * 0.88, w * 0.46, h * 0.18).fill({ color: 0x1f1714, alpha: 0.9 });
@@ -833,16 +852,16 @@ export class HoardScene {
     this.torchLight.width = w * 0.74;
     this.torchLight.height = h * 0.62;
     this.torchLight.position.set(w * 0.5, h * 0.36);
-    this.torchLight.alpha = paintedBackdrop ? style.torchAlpha * 0.88 : style.torchAlpha;
+    this.torchLight.alpha = paintedBackdrop ? style.torchAlpha * 0.72 : style.torchAlpha;
     this.torchLight.blendMode = 'add';
 
     this.foregroundMist = Sprite.from(withBase('/assets/backgrounds/foreground-mist.svg'));
     this.foregroundMist.width = w;
     this.foregroundMist.height = h;
-    this.foregroundMist.alpha = paintedBackdrop ? 0.2 : 0.29;
+    this.foregroundMist.alpha = paintedBackdrop ? 0.16 : 0.29;
 
     this.edgeVeil = new Graphics();
-    this.edgeVeil.rect(0, 0, w, h).fill({ color: 0x050406, alpha: paintedBackdrop ? 0.2 : 0.32 });
+    this.edgeVeil.rect(0, 0, w, h).fill({ color: 0x050406, alpha: paintedBackdrop ? 0.14 : 0.32 });
     this.edgeVeil.ellipse(w * 0.52, h * 0.56, w * 0.44, h * 0.33).fill({ color: 0x000000, alpha: paintedBackdrop ? 0.06 : 0.1 });
     this.edgeVeil.blendMode = 'multiply';
 

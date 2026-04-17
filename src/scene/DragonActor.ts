@@ -517,6 +517,14 @@ export class DragonActor {
 
     this.body.y = breathe * 1.5 + hover * 0.7;
     this.body.scale.y = 1 + breathe * 0.012;
+    if (this.heroSprite) {
+      const sway = this.reducedMotion ? 0 : Math.sin(now * 0.58) * 0.012;
+      const driftX = this.reducedMotion ? 0 : Math.sin(now * 0.45) * 1.8;
+      this.body.rotation = sway;
+      this.body.x = driftX;
+      this.heroSprite.skew.x = this.reducedMotion ? 0 : Math.sin(now * 0.72) * 0.016;
+      this.heroSprite.skew.y = this.reducedMotion ? 0 : Math.sin(now * 0.55) * 0.008;
+    }
 
     if (this.scalesSprite) {
       this.scalesSprite.y = 0.8 + breathe * 1.1;

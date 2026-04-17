@@ -74,7 +74,15 @@ const preloadAtlasKind = async (kind: AtlasKind): Promise<Texture> => {
 };
 
 export const preloadAtlasTextures = async (): Promise<void> => {
-  await Promise.all((Object.keys(atlasDefs) as AtlasKind[]).map((kind) => preloadAtlasKind(kind)));
+  await preloadAtlasKind('treasure');
+
+  // Dragon atlas is optional when hero sprite mode is active.
+  // Keep loading non-blocking so scene init cannot hang on this asset set.
+  void preloadAtlasKind('dragon').catch((error) => {
+    if (import.meta.env.DEV) {
+      console.warn('Dragon atlas preload skipped:', error);
+    }
+  });
 };
 
 const getAtlasBaseTexture = (kind: AtlasKind): Texture => {

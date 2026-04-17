@@ -280,9 +280,7 @@ export const App = () => {
           />
         ) : null}
 
-        {!cleanMode ? (
-          <LorePanel item={selectedItem} open={panelOpen} onClose={() => setPanelOpen(false)} dockLeft />
-        ) : null}
+        {!cleanMode ? <LorePanel item={selectedItem} open={panelOpen} onClose={() => setPanelOpen(false)} /> : null}
 
         <AccessibilityList
           open={browseMode || reducedMotion}

@@ -88,6 +88,7 @@ export class HoardPhysics {
     }
 
     const thickness = 130;
+    const ceilingY = -Math.max(220, this.height * 0.34);
     const floor = Bodies.rectangle(this.width / 2, this.height + thickness * 0.5, this.width + 240, thickness, {
       isStatic: true,
       restitution: 0.24,
@@ -109,7 +110,7 @@ export class HoardPhysics {
       label: '__right__',
     });
 
-    const ceiling = Bodies.rectangle(this.width / 2, -thickness * 0.5, this.width + 220, thickness, {
+    const ceiling = Bodies.rectangle(this.width / 2, ceilingY, this.width + 220, thickness, {
       isStatic: true,
       restitution: 0.2,
       friction: 0.8,
@@ -422,9 +423,13 @@ export class HoardPhysics {
       };
     }
 
+    const dropTop = -Math.min(34, this.height * 0.045);
+    const dropDepth = Math.min(132, this.height * 0.16);
+    const dropStagger = Math.min(index * 0.45, 48);
+
     return {
       x: clamp(moundCenterX + spreadX * 0.86, this.width * 0.16, this.width * 0.84),
-      y: -140 - rng() * 220 - index * 3.2 - sizeBias * 18,
+      y: dropTop - rng() * dropDepth - dropStagger - sizeBias * 11,
     };
   }
 
