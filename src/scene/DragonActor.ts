@@ -1,7 +1,7 @@
 import { Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
 import gsap from 'gsap';
 import type { DragonColorTheme } from '../types/dragon';
-import { withBase } from '../utils/basePath';
+import dragonHeroImageUrl from '../assets/dragonhero.png';
 import { clamp, lerp } from '../utils/math';
 import type { DragonAtlasFrameKey } from './atlasData';
 import { getDragonAtlasTexture } from './atlasTextures';
@@ -770,7 +770,7 @@ export class DragonActor {
       this.throatShadow.position.set(108, -24);
       this.smokeOverlay.position.set(126, -96);
 
-      this.heroSprite = Sprite.from(withBase('/assets/source/dragonhero.png'));
+      this.heroSprite = Sprite.from(dragonHeroImageUrl);
       this.heroSprite.anchor.set(0.5);
       // Use scale (not width/height) so async texture load does not blow up sizing.
       this.heroSprite.scale.set(0.535);

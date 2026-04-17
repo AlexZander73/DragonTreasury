@@ -79,27 +79,6 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
     let cancelled = false;
     let loadedSignaled = false;
     sceneReadyRef.current = false;
-    const scene = new HoardScene({
-      host: hostRef.current,
-      items,
-      reducedMotion,
-      muted,
-      dragonColorTheme,
-      sceneTheme,
-      bgmTrack,
-      quality: {
-        maxParticles: quality.maxParticles,
-        dragonDetail: 'full',
-        effects: true,
-      },
-      callbacks: {
-        onSelect,
-        onDragonSecretUnlock,
-        onDragonClick: onDragonClickCount,
-      },
-    });
-
-    sceneRef.current = scene;
     const signalLoaded = (): void => {
       if (loadedSignaled) {
         return;
@@ -116,25 +95,71 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
       signalLoaded();
     }, 6500);
 
-    preloadAtlasTextures()
-      .then(() => scene.init(items))
-      .then(() => {
-        window.clearTimeout(initTimeout);
-        if (cancelled) {
+    const waitForHostSize = async (host: HTMLDivElement): Promise<void> => {
+      const deadline = performance.now() + 2200;
+      while (!cancelled && performance.now() < deadline) {
+        const rect = host.getBoundingClientRect();
+        if (rect.width > 120 && rect.height > 120) {
           return;
         }
-        sceneReadyRef.current = true;
-        scene.setItems(latestItemsRef.current);
-        scene.setVisibleItems(latestVisibleItemIdsRef.current);
-        signalLoaded();
-      })
-      .catch((error) => {
-        window.clearTimeout(initTimeout);
-        console.error('Failed to initialize scene', error);
-        if (!cancelled) {
-          signalLoaded();
-        }
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+    };
+
+    const initialize = async (): Promise<void> => {
+      const host = hostRef.current;
+      if (!host) {
+        return;
+      }
+      await waitForHostSize(host);
+      if (cancelled) {
+        return;
+      }
+
+      const scene = new HoardScene({
+        host,
+        items,
+        reducedMotion,
+        muted,
+        dragonColorTheme,
+        sceneTheme,
+        bgmTrack,
+        quality: {
+          maxParticles: quality.maxParticles,
+          dragonDetail: 'full',
+          effects: true,
+        },
+        callbacks: {
+          onSelect,
+          onDragonSecretUnlock,
+          onDragonClick: onDragonClickCount,
+        },
       });
+
+      sceneRef.current = scene;
+      await preloadAtlasTextures();
+      if (cancelled) {
+        return;
+      }
+      await scene.init(items);
+      if (cancelled) {
+        return;
+      }
+
+      window.clearTimeout(initTimeout);
+      sceneReadyRef.current = true;
+      scene.setItems(latestItemsRef.current);
+      scene.setVisibleItems(latestVisibleItemIdsRef.current);
+      signalLoaded();
+    };
+
+    initialize().catch((error) => {
+      window.clearTimeout(initTimeout);
+      console.error('Failed to initialize scene', error);
+      if (!cancelled) {
+        signalLoaded();
+      }
+    });
 
     return () => {
       cancelled = true;

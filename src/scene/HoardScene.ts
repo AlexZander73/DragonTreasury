@@ -291,7 +291,8 @@ export class HoardScene {
     this.audio.setSceneTheme(this.sceneTheme);
     this.audio.setMusicTrack(this.bgmTrack);
 
-    this.physics = new HoardPhysics(this.host.clientWidth, this.host.clientHeight);
+    const initialSize = this.getHostSize();
+    this.physics = new HoardPhysics(initialSize.width, initialSize.height);
     this.physics.setCollisionListener(({ relativeVelocity }) => {
       const normalized = clamp(relativeVelocity / 8, 0, 1.25);
       this.audio.playCollision(normalized);
@@ -331,6 +332,7 @@ export class HoardScene {
     });
 
     this.positionDragon();
+    this.syncLayoutAfterInit();
 
     const visibilityHandler = (): void => {
       this.hidden = document.hidden;
@@ -433,6 +435,10 @@ export class HoardScene {
 
     if (!this.physics) {
       return;
+    }
+
+    if (import.meta.env.DEV) {
+      console.debug(`[HoardScene] setItems=${items.length} visible=${this.visibleItemIds.size}`);
     }
 
     for (const id of this.entities.keys()) {
@@ -640,7 +646,8 @@ export class HoardScene {
       return;
     }
 
-    this.physics.resize(this.host.clientWidth, this.host.clientHeight);
+    const size = this.getHostSize();
+    this.physics.resize(size.width, size.height);
     this.positionDragon();
     this.drawBackground();
   };
@@ -1109,9 +1116,31 @@ export class HoardScene {
       return;
     }
 
-    const x = this.host.clientWidth * 0.74;
-    const y = this.host.clientHeight * 0.63;
+    const size = this.getHostSize();
+    const x = size.width * 0.74;
+    const y = size.height * 0.63;
     this.dragon.setPosition(x, y);
+  }
+
+  private getHostSize(): { width: number; height: number } {
+    const rect = this.host.getBoundingClientRect();
+    const width = Math.max(320, Math.round(rect.width) || this.host.clientWidth || window.innerWidth || 1280);
+    const height = Math.max(320, Math.round(rect.height) || this.host.clientHeight || window.innerHeight || 720);
+    return { width, height };
+  }
+
+  private syncLayoutAfterInit(): void {
+    const sync = (): void => {
+      if (!this.physics) {
+        return;
+      }
+      const size = this.getHostSize();
+      this.physics.resize(size.width, size.height);
+      this.positionDragon();
+      this.drawBackground();
+    };
+
+    requestAnimationFrame(() => requestAnimationFrame(sync));
   }
 
 }
