@@ -1,4 +1,5 @@
 import { Assets, Rectangle, Texture } from 'pixi.js';
+import dragonHeroBundledUrl from '../assets/dragonhero.png';
 import { withBase } from '../utils/basePath';
 import {
   DRAGON_ATLAS_DATA,
@@ -33,6 +34,7 @@ const baseTextureCache = new Map<AtlasKind, Texture>();
 const frameTextureCache = new Map<string, Texture>();
 const preloadPromises = new Map<AtlasKind, Promise<Texture>>();
 const loadedPathByKind = new Map<AtlasKind, string>();
+let resolvedHeroDragonUrl = withBase('/assets/source/dragonhero.png');
 
 const getPreferredImagePaths = (kind: AtlasKind): string[] => {
   const def = atlasDefs[kind];
@@ -84,6 +86,27 @@ export const preloadAtlasTextures = async (): Promise<void> => {
     }
   });
 };
+
+export const preloadHeroDragonTexture = async (): Promise<void> => {
+  const candidates = [withBase('/assets/source/dragonhero.png'), dragonHeroBundledUrl];
+  let lastError: unknown = null;
+
+  for (const url of candidates) {
+    try {
+      await Assets.load(url);
+      resolvedHeroDragonUrl = url;
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (import.meta.env.DEV && lastError) {
+    console.warn('Hero dragon texture preload failed for all candidates:', lastError);
+  }
+};
+
+export const getHeroDragonTextureUrl = (): string => resolvedHeroDragonUrl;
 
 const getAtlasBaseTexture = (kind: AtlasKind): Texture => {
   const cached = baseTextureCache.get(kind);

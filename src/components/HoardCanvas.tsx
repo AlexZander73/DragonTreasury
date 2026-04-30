@@ -4,7 +4,7 @@ import type { DragonColorTheme } from '../types/dragon';
 import type { BgmTrack, SceneTheme } from '../types/environment';
 import type { ArrangeMode } from '../types/filters';
 import { HoardScene } from '../scene/HoardScene';
-import { preloadAtlasTextures } from '../scene/atlasTextures';
+import { preloadAtlasTextures, preloadHeroDragonTexture } from '../scene/atlasTextures';
 
 export interface HoardCanvasHandle {
   resetPile: () => void;
@@ -138,6 +138,7 @@ export const HoardCanvas = forwardRef<HoardCanvasHandle, HoardCanvasProps>(funct
 
       sceneRef.current = scene;
       await preloadAtlasTextures();
+      await preloadHeroDragonTexture();
       if (cancelled) {
         return;
       }
