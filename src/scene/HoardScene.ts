@@ -1,4 +1,4 @@
-import { Application, BlurFilter, Container, FederatedPointerEvent, Graphics, Sprite } from 'pixi.js';
+import { Application, Assets, BlurFilter, Container, FederatedPointerEvent, Graphics, Sprite } from 'pixi.js';
 import gsap from 'gsap';
 import type { Body } from 'matter-js';
 import type { HoardItem } from '../types/content';
@@ -210,6 +210,7 @@ export class HoardScene {
   private foregroundMist: Sprite | null = null;
   private hoardWarmth: Graphics | null = null;
   private edgeVeil: Graphics | null = null;
+  private resolvedBackdropByTheme = new Map<SceneTheme, string>();
 
   private entities = new Map<string, TreasureEntity>();
   private itemsById = new Map<string, HoardItem>();
@@ -270,8 +271,8 @@ export class HoardScene {
     this.world.eventMode = 'passive';
     this.bgLayer.zIndex = 0;
     this.midLayer.zIndex = 1;
+    this.dragonLayer.zIndex = 1.8;
     this.treasureLayer.zIndex = 2;
-    this.dragonLayer.zIndex = 3;
     this.fxLayer.zIndex = 4;
     this.overlayLayer.zIndex = 5;
 
@@ -286,6 +287,7 @@ export class HoardScene {
     this.app.stage.addChild(this.world);
     this.treasureLayer.sortableChildren = true;
 
+    await this.preloadAllBackdrops();
     this.drawBackground();
     this.particles.setSceneTheme(this.sceneTheme);
     this.fxLayer.addChild(this.particles.container);
@@ -379,7 +381,11 @@ export class HoardScene {
     this.sceneTheme = theme;
     this.audio.setSceneTheme(theme);
     this.particles.setSceneTheme(theme);
-    this.drawBackground();
+    void this.preloadBackdrop(theme).finally(() => {
+      if (this.sceneTheme === theme) {
+        this.drawBackground();
+      }
+    });
   }
 
   setBgmTrack(track: BgmTrack): void {
@@ -763,7 +769,8 @@ export class HoardScene {
     const h = size.height;
     const style = SCENE_VISUAL_STYLES[this.sceneTheme];
     const assets = SCENE_VISUAL_ASSETS[this.sceneTheme];
-    const paintedBackdrop = isPaintedBackdropPath(assets.backdrop);
+    const backdropAssetPath = this.resolvedBackdropByTheme.get(this.sceneTheme) ?? assets.backdrop;
+    const paintedBackdrop = isPaintedBackdropPath(backdropAssetPath);
     this.paintedBackdropActive = paintedBackdrop;
     const paintShadeMult = paintedBackdrop ? 0.34 : 1;
     const paintAccentMult = paintedBackdrop ? 0.42 : 1;
@@ -771,7 +778,7 @@ export class HoardScene {
     const haze = new Graphics();
     haze.rect(0, 0, w, h).fill({ color: style.hazeColor, alpha: style.hazeAlpha * paintShadeMult });
 
-    const backdrop = Sprite.from(withBase(assets.backdrop));
+    const backdrop = Sprite.from(withBase(backdropAssetPath));
     backdrop.width = w;
     backdrop.height = h;
     backdrop.alpha = paintedBackdrop ? 1 : 0.97;
@@ -801,18 +808,18 @@ export class HoardScene {
     const fog = new Graphics();
     fog.ellipse(w * 0.5, h * 0.74, w * 0.64, h * 0.2).fill({ color: style.groundFogColor, alpha: paintedBackdrop ? 0.07 : 0.15 });
 
-    const midground = assets.midground ? Sprite.from(withBase(assets.midground)) : null;
+    const midground = !paintedBackdrop && assets.midground ? Sprite.from(withBase(assets.midground)) : null;
     if (midground) {
       midground.width = w;
       midground.height = h;
       midground.alpha = paintedBackdrop ? 0.16 : 0.8;
     }
     const thematicBand = this.createThemeFeatureBand(this.sceneTheme, w, h);
-    thematicBand.alpha = paintedBackdrop ? 0.24 : 1;
+    thematicBand.alpha = paintedBackdrop ? 0.14 : 1;
 
     const backdropHoard = this.createBackdropHoardDecor(w, h);
 
-    const fogOverlay = assets.fog ? Sprite.from(withBase(assets.fog)) : null;
+    const fogOverlay = !paintedBackdrop && assets.fog ? Sprite.from(withBase(assets.fog)) : null;
     if (fogOverlay) {
       fogOverlay.width = w;
       fogOverlay.height = h;
@@ -858,7 +865,7 @@ export class HoardScene {
     this.foregroundMist = Sprite.from(withBase('/assets/backgrounds/foreground-mist.svg'));
     this.foregroundMist.width = w;
     this.foregroundMist.height = h;
-    this.foregroundMist.alpha = paintedBackdrop ? 0.16 : 0.29;
+    this.foregroundMist.alpha = paintedBackdrop ? 0.12 : 0.29;
 
     this.edgeVeil = new Graphics();
     this.edgeVeil.rect(0, 0, w, h).fill({ color: 0x050406, alpha: paintedBackdrop ? 0.14 : 0.32 });
@@ -866,6 +873,32 @@ export class HoardScene {
     this.edgeVeil.blendMode = 'multiply';
 
     this.overlayLayer.addChild(this.torchLight, this.foregroundMist, this.edgeVeil);
+  }
+
+  private async preloadAllBackdrops(): Promise<void> {
+    const themes = Object.keys(SCENE_VISUAL_ASSETS) as SceneTheme[];
+    await Promise.all(themes.map((theme) => this.preloadBackdrop(theme)));
+  }
+
+  private async preloadBackdrop(theme: SceneTheme): Promise<void> {
+    if (this.resolvedBackdropByTheme.has(theme)) {
+      return;
+    }
+
+    const fallbackTheme = theme === 'treasury' ? 'cave' : theme;
+    const candidates = [SCENE_VISUAL_ASSETS[theme].backdrop, `/assets/backgrounds/${fallbackTheme}-backdrop.svg`];
+
+    for (const candidate of candidates) {
+      try {
+        await Assets.load(withBase(candidate));
+        this.resolvedBackdropByTheme.set(theme, candidate);
+        return;
+      } catch {
+        // continue fallback chain
+      }
+    }
+
+    this.resolvedBackdropByTheme.set(theme, SCENE_VISUAL_ASSETS[theme].backdrop);
   }
 
   private createThemeOcclusion(theme: SceneTheme, width: number, height: number): Container {
