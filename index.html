@@ -3,14 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="The Hoard: an interactive 2.5D dragon cave archive of projects, experiments, and relics."
-    />
-    <title>The Hoard</title>
+    <meta name="theme-color" content="#101510" />
+    <meta name="description" content="Enter the Dragon Treasury. Explore Zach Mackay’s projects as treasures in an interactive 3D world, watched over by an ancient dragon." />
+    <link rel="canonical" href="https://zachmackay.com/projects/DragonTreasury/" />
+    <title>Dragon Treasury · Zach Mackay</title>
+    <script>
+      if (location.protocol === 'file:') document.documentElement.dataset.localFile = 'true';
+    </script>
+    <style>
+      .local-file-help { display: none; }
+      html[data-local-file] { color-scheme: dark; background: #141916; color: #eee9db; font: 16px/1.7 system-ui, sans-serif; }
+      html[data-local-file] .local-file-help { display: block; max-width: 620px; margin: 12vh auto; padding: 28px; }
+      .local-file-help h1 { font: 44px/1.1 Georgia, serif; color: #d6b878; }
+      .local-file-help code { display: block; padding: 12px 16px; background: #242c22; border-radius: 4px; overflow-wrap: anywhere; }
+      .local-file-help a { display: inline-block; margin-top: 14px; color: #141916; background: #d6b878; padding: 10px 18px; border-radius: 4px; text-decoration: none; }
+      .local-file-help a:focus-visible { outline: 2px solid #eee9db; outline-offset: 5px; }
+    </style>
+    <script vite-ignore src="../../assets/js/project-catalog.js"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <section class="local-file-help" aria-labelledby="local-file-title">
+        <h1 id="local-file-title">Open the treasury through its website.</h1>
+        <p>This is a static GitHub Pages site. Opening the HTML directly from disk prevents the browser from loading the app and its shared project catalog.</p>
+        <p>For a local preview, run this from MainWebsite:</p>
+        <code>cd tools/dragon-treasury<br />npm run preview</code>
+        <a href="http://127.0.0.1:4178/projects/DragonTreasury/">Open local preview</a>
+        <p>GitHub Pages serves the published files directly. No backend is required.</p>
+      </section>
+    </div>
+    <noscript><p>Dragon Treasury needs JavaScript for its interactive world. <a href="../../projects.html">Browse Zach Mackay’s projects.</a></p></noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

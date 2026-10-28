@@ -1,233 +1,92 @@
-# The Hoard (Working Title)
+# Dragon Treasury
 
-An interactive 2.5D dragon cave archive where every item in the treasure pile represents a project, product, experiment, note, or relic.
+An interactive Three.js world for Zach Mackay's portfolio. An animated, faceted dragon watches over metallic coin piles, treasure chests, crystals, spellbooks and armillary orbs. Every selectable relic corresponds to one real MainWebsite project.
 
-This is intentionally atmospheric and tactile rather than practical portfolio UI.
+**Canonical destination:** `https://zachmackay.com/projects/DragonTreasury/`
 
-## Concept
+## One project catalog
 
-The Hoard is a static site that runs entirely in the browser and deploys cleanly to GitHub Pages.
+MainWebsite's **`data/showcase.json` is the only project registry**. The treasury loads it at runtime through MainWebsite's existing `assets/js/project-catalog.js`. That shared loader controls ordering, site-relative URLs and which projects can be entered. There is no bundled snapshot, separate seed list, scraping step or fallback set of projects.
 
-- `PixiJS` renders a layered cave scene with fake depth (parallax, haze, glow, vignette, particles).
-- `Matter.js` drives physical treasure collisions and drag/toss interactions.
-- `GSAP` handles polish animations (intro fade, panel transitions, dragon behavior beats).
-- Local content modules provide the source of truth for relic metadata.
+Catalog edits appear on the next page load, without rebuilding the treasury. Only `status: "shipped"` counts as released. In-development projects can be entered only when the catalog enables `previewAvailable`; all projects remain inspectable in the treasury. Decorative coins and rocks are scenery, not invented catalog records.
 
-## Stack
+## MainWebsite layout
 
-- Vite
-- React + TypeScript
-- PixiJS
-- Matter.js
-- GSAP
-- GitHub Actions for GitHub Pages deploy
+- `tools/dragon-treasury/`: editable source, package lock, tests and build configuration.
+- `projects/DragonTreasury/`: generated static page and hashed assets, served by MainWebsite.
+- `data/showcase.json`: existing shared project registry.
+- `assets/js/project-catalog.js`: existing shared catalog API.
 
-## Quick Start
+The original DragonTreasury checkout can also run against its sibling `../MainWebsite`. After integration, make future changes in MainWebsite's `tools/dragon-treasury/`.
 
-```bash
-npm install
+## Develop
+
+Use Node 22.18+ (Node 24 LTS recommended).
+
+```sh
+cd tools/dragon-treasury
+npm ci
 npm run dev
 ```
 
-Open the local Vite URL shown in terminal.
+Open the printed `/projects/DragonTreasury/` URL. Vite reads the actual MainWebsite catalog, shared loader, project images and product pages through a read-only middleware. It does not duplicate them. Set `MAIN_WEBSITE_ROOT` if MainWebsite isn't the containing repository or the original sibling checkout.
 
-## Build
+## Preview the built MainWebsite copy
 
-```bash
-npm run build
+```sh
+cd tools/dragon-treasury
 npm run preview
 ```
 
-Build output is generated in `dist/`.
+Open `http://127.0.0.1:4178/projects/DragonTreasury/`. This serves the actual files in MainWebsite's `projects/DragonTreasury/` together with its shared catalog, images and linked product pages. It does not use the Vite development app or a separate catalog. Run `npm run build:site` first after source changes.
 
-## GitHub Pages Deployment
+Opening an `index.html` directly with `file://` cannot run the app's JavaScript modules or fetch its shared catalog; it now shows these instructions instead of a blank page. On GitHub Pages, the built HTML, CSS, JavaScript and JSON are served normally. **No backend or running Node process is needed in production.**
 
-This repository includes `.github/workflows/deploy-pages.yml`.
+## Validate and build
 
-Deployment assumptions:
-
-- Branch: `main`
-- Action sets `VITE_BASE_PATH=/<repo-name>/`
-- Built static output from `dist/` is uploaded and deployed via `actions/deploy-pages`
-
-If your Pages configuration is repository-based (not custom domain), this works out of the box.
-
-## Project Structure
-
-```text
-src/
-  app/                App orchestration/state
-  audio/              WebAudio manager (ambient + SFX)
-  components/         React UI and scene host components
-  content/            Seed data, taxonomy mapping, adapter abstraction
-  hooks/              Local storage + motion preference hooks
-  physics/            Matter engine setup and arrangement logic
-  scene/              Pixi scene, dragon actor, particles, treasure visuals
-  styles/             Global and UI styling
-  types/              Shared domain types
-  utils/              Filtering, seeded RNG, helpers
-public/assets/
-  backgrounds/
-  dragon/
-  treasure/
-  particles/
-  ui/
-  audio/
-  docs/
-scripts/
-  generate_painted_atlases.py
+```sh
+npm test
+npm run build:site
 ```
 
-## Content System
+`build:site` type-checks, bundles and exports into MainWebsite's `projects/DragonTreasury/`. Commit the source and generated output together. Catalog-only changes do not require this build. MainWebsite's normal deployment publishes the page at the canonical route. `npm run build` alone only writes local `dist/`.
 
-Runtime content source:
+For the MainWebsite catalog and sitemap, run these from the repository root:
 
-- `src/content/seedData.ts`
-
-Current seed includes:
-
-- A curated sample archive
-- Real catalog entries from your provided `Products` and `Projects` lists
-- Supplemental seed entries for interaction/scale testing
-
-Key schema (`HoardItem`) includes:
-
-- id, title, short/long descriptions
-- type, category, rarity, status, year
-- tags, tech stack, links, images
-- repo/live URL, notes, why-it-matters
-- visual hints, physics properties, dragon affinity, featured flag
-
-### Edit / Add Items
-
-1. Open `src/content/seedData.ts`.
-2. Add or update entries using `createDefaultItem({...})`.
-3. Keep IDs unique.
-4. Rebuild and confirm behavior in filters + scene.
-
-### Future Import Adapter
-
-The app does not depend on scraping.
-
-For future ingestion:
-
-- Implement `ContentAdapter` in `src/content/adapters.ts`.
-- Add build-time importer scripts (optional) under a `scripts/` folder.
-- Validate imported entries with `validateHoardItems`.
-
-See `src/content/importer/README.md`.
-
-## Interaction Summary
-
-- Drag/toss treasure items; neighboring objects react through real collisions.
-- Single click selects and opens lore.
-- Double click focuses item and opens lore with stronger emphasis.
-- Toggle arrange mode:
-  - pile
-  - timeline
-  - category
-  - era
-- Scene switcher with distinct atmosphere:
-  - dragon cave
-  - castle vault
-  - mountain summit
-  - ancient forest
-  - sunken treasury
-- Filters: category, rarity, year range, tags, query, featured highlight.
-- Accessibility fallback: browse list mode for keyboard-first navigation.
-
-## Dragon Behavior System
-
-Implemented in `src/scene/DragonActor.ts`.
-
-Includes:
-
-- breathing and chest glow cycle
-- blinking and subtle head/eye tracking
-- tail and wing idle motion
-- periodic smoke
-- reactive look/huff on stronger disturbances
-- legendary focus reaction
-- occasional nudge of nearby treasure
-- hidden interaction path (secret relic unlock)
-
-## Audio System
-
-Implemented in `src/audio/AudioManager.ts`.
-
-- Ambient cave loop (procedural fallback)
-- Scene-reactive ambient profiles (different EQ/noise per environment)
-- Optional BGM tracks (including auto scene-linked mode)
-- Collision accents
-- Select accents by rarity
-- Dragon huff/rumble cues
-- Mute toggle persisted in localStorage
-- Audio unlock deferred until first user interaction (browser-policy safe)
-
-Optional replacement audio files can be added under `public/assets/audio/`.
-
-## Performance and Quality Tuning
-
-Controls and safeguards are spread across:
-
-- `src/physics/physicsConfig.ts`
-- `src/scene/ParticleSystem.ts`
-- `src/app/App.tsx` (quality selection)
-
-Important knobs:
-
-- `maxParticles`
-- drag toss multiplier and velocity limits
-- arrangement pull strength
-- reduced motion toggle
-- mobile quality fallback
-
-Target range is approximately 40–100 physics items with graceful behavior.
-
-## Accessibility Considerations
-
-- Keyboard-accessible controls
-- Visible focus rings
-- Reduced motion toggle
-- Mute toggle
-- Browse list fallback for non-drag navigation
-- Lore panel scroll support and readable contrast
-- Escape key closes lore panel
-
-## Asset Replacement Guide
-
-- Read `public/assets/docs/asset-spec.md`
-- Dragon layer guide: `public/assets/dragon/dragon-layer-guide.txt`
-- Treasure sheet naming: `public/assets/treasure/treasure-sheet-guide.txt`
-- Runtime dragon + treasure visuals are atlas-driven from `public/assets/atlases/*.png|*.webp` (frame metadata in `*.json`).
-- Regenerate current painted atlas set with:
-
-```bash
-python3 scripts/generate_painted_atlases.py
+```sh
+python3 scripts/build-catalog.py
+python3 scripts/build-catalog.py --check
+node --test scripts/project-catalog.test.cjs
 ```
 
-Optional trace-cutout mode:
+The treasury source workflow builds and tests source changes and checks that the committed static output is current. Sitemap discovery includes the public `projects` directory, and excludes the editable source under `tools`.
 
-- Drop `dragon-reference.(png|webp|jpg)` and/or `treasure-reference.(png|webp|jpg)` into `public/assets/source/`.
-- Shortcut names are also supported: `public/assets/source/dragonhero.png`, `public/assets/source/dragon.png`, and `public/assets/source/booty.png`.
-- Optional: place direct traced cutouts in `public/assets/source/dragon-parts/` and `public/assets/source/treasure-parts/` with part names from `public/assets/source/README.md`.
-- The generator prefers direct cutout files, then sheet crops, then procedural painted fallback.
+## Explore
 
-The rig and physics layer contracts stay stable as long as frame keys and dimensions remain consistent.
+- Drag to orbit, scroll or pinch to zoom; Reset returns to the entrance.
+- Click a 3D treasure or its collection card to read the project and follow an enabled project link.
+- Wake the dragon for a wing stretch, head movement and ember breath.
+- Switch between the Ember Vault, Moonlit Grotto and Emerald Hollow lighting.
+- Arrange relics in a natural hoard or a gallery.
+- Search by name, description, platform, technology or tag; filter by featured, released or category.
+- Collection view exposes the same records without spatial navigation.
+- `/` focuses search; Escape closes panels; controls and cards support keyboard navigation.
+- Pause animation, opt into ambient sound, or reduce motion in Help. Reduced motion follows the system preference initially and can be overridden locally.
 
-## Notes on Static Compatibility
+## Rendering and graceful fallback
 
-- No backend required.
-- No runtime database.
-- No paid services.
-- No runtime scraping dependency.
-- Local content data is the source of truth.
-- `dist/` output is fully static and GitHub Pages compatible.
+Three.js loads after the catalog UI. No 3D model downloads or paid services are required: the rig, world, relics and animations are generated locally. Coin piles use instancing; mobile screens use fewer coins and a capped pixel ratio. Rendering pauses in hidden tabs and Collection view. If WebGL initialization or context fails, Collection view remains usable. Catalog errors are explicit and never silently replaced with stale data.
 
-## Future Extensions
+The serif and UI fonts use Google Fonts with local system fallbacks. All project imagery comes from MainWebsite's shared catalog. Scene geometry and UI code are original procedural assets.
 
-- Swap generated atlases with fully hand-painted production atlases
-- Optional sprite sheets for richer dragon animation cycles
-- Build-time importer from external JSON sources
-- Save user-created display presets (filter + arrange mode)
-- Expanded hidden lore chains and rare ambient events
+## Source guide
+
+- `src/treasury/dragon.ts`: articulated dragon, wings, tail, blinking, breathing and ember particles.
+- `src/treasury/world.ts`: chamber, lighting, instanced coins, relics, picking, orbit controls and cleanup.
+- `src/treasury/Treasury.tsx`: collection, details, filtering, accessibility and controls.
+- `src/treasury/catalog.ts`: typed access to the existing shared catalog API.
+- `src/treasury/sound.ts`: optional browser-generated ambient audio.
+- `src/treasury/treasury.css`: responsive presentation.
+- `tests/catalog.test.mjs`: actual-catalog integration, URL/access parity, filtering and failure checks.
+
+Legacy sprite artwork in the original checkout's `public/` is not used, copied or deployed by the new build.
