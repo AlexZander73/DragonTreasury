@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { Dragon, bone, mesh } from './dragon';
 import { hashId, type Project } from './catalog';
+import { renderPixelRatio, sceneFailure } from './scene-recovery';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 export type Chamber = 'ember' | 'moon' | 'forest';
@@ -24,8 +25,8 @@ const ivory = new THREE.MeshStandardMaterial({ color: '#c6b692', roughness: .7 }
 export class TreasuryWorld {
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(40, 1, .1, 100);
-  private renderer: THREE.WebGLRenderer;
-  private controls: OrbitControls;
+  private renderer!: THREE.WebGLRenderer;
+  private controls!: OrbitControls;
   private dragon = new Dragon();
   private treasures = new Map<string, THREE.Group>();
   private basePositions = new Map<string, THREE.Vector3>();
@@ -34,14 +35,14 @@ export class TreasuryWorld {
   private selection = new THREE.Group();
   private selected: string | null = null;
   private hovered: string | null = null;
-  private particles: THREE.Points;
+  private particles!: THREE.Points;
   private torches: THREE.PointLight[] = [];
   private flames: THREE.Mesh[] = [];
   private key = new THREE.DirectionalLight('#ffe1a0', 4.2);
   private rim = new THREE.DirectionalLight('#7bc1b2', 3);
   private lastFrame = performance.now();
   private time = 0;
-  private observer: ResizeObserver;
+  private observer?: ResizeObserver;
   private reduced = false;
   private paused = false;
   private visible = true;
@@ -53,26 +54,35 @@ export class TreasuryWorld {
   private pointer = new THREE.Vector2();
   private targetCamera: THREE.Vector3 | null = null;
   private targetLook: THREE.Vector3 | null = null;
-  private environment: THREE.WebGLRenderTarget;
+  private environment?: THREE.WebGLRenderTarget;
   private resize = () => {
     const width = this.host.clientWidth, height = this.host.clientHeight;
     if (!width || !height) return;
     this.camera.aspect = width / height; this.camera.updateProjectionMatrix();
+    this.renderer.setPixelRatio(renderPixelRatio(width, height, window.devicePixelRatio, this.reducedGraphics));
     this.renderer.setSize(width, height, false);
   };
 
-  constructor(private host: HTMLElement, projects: Project[], private callbacks: Callbacks) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth < 700 ? 1.35 : 1.7));
-    this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFShadowMap;
+  constructor(private host: HTMLElement, projects: Project[], private callbacks: Callbacks, private reducedGraphics = false) {
+    try { this.initialize(projects); }
+    catch (error) { this.dispose(); throw error; }
+  }
+
+  private initialize(projects: Project[]) {
+    // Multisample buffers and an oversized Retina canvas can exhaust WebKit's
+    // graphics budget. Let the browser choose its GPU and cap the actual pixels.
+    this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'default' });
+    this.renderer.shadowMap.enabled = !this.reducedGraphics; this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.3;
     this.renderer.domElement.setAttribute('aria-label', 'Interactive 3D treasury. Drag to orbit, scroll to zoom, or select a treasure. All projects are also available in the collection below.');
     this.renderer.domElement.setAttribute('role', 'img');
     this.host.append(this.renderer.domElement);
     const generator = new THREE.PMREMGenerator(this.renderer);
     const room = new RoomEnvironment();
-    this.environment = generator.fromScene(room, .04); this.scene.environment = this.environment.texture;
-    room.dispose(); generator.dispose();
+    try {
+      this.environment = generator.fromScene(room, .04, .1, 100, { size: this.reducedGraphics ? 64 : 128 });
+      this.scene.environment = this.environment.texture;
+    } finally { room.dispose(); generator.dispose(); }
     this.scene.environmentIntensity = .65;
     this.scene.fog = new THREE.FogExp2('#141916', .027);
     this.camera.position.set(11.5, 8.5, 20);
@@ -86,7 +96,7 @@ export class TreasuryWorld {
     this.controls.update();
     this.scene.add(new THREE.HemisphereLight('#e3ecdd', '#40301f', 1.5));
     this.key.position.set(-3, 13, 8); this.key.castShadow = true;
-    this.key.shadow.mapSize.set(2048, 2048); this.key.shadow.camera.left = -13; this.key.shadow.camera.right = 13; this.key.shadow.camera.top = 13; this.key.shadow.camera.bottom = -13;
+    this.key.shadow.mapSize.set(1024, 1024); this.key.shadow.camera.left = -13; this.key.shadow.camera.right = 13; this.key.shadow.camera.top = 13; this.key.shadow.camera.bottom = -13;
     this.key.shadow.normalBias = .035; this.key.shadow.bias = -.00015;
     this.rim.position.set(4, 8, -7); this.scene.add(this.key, this.rim);
     this.makeChamber();
@@ -113,14 +123,17 @@ export class TreasuryWorld {
     for (let i = 0; i < 170; i++) { particlePositions[i * 3] = (rng() - .5) * 25; particlePositions[i * 3 + 1] = rng() * 12; particlePositions[i * 3 + 2] = (rng() - .5) * 22; }
     const particleGeometry = new THREE.BufferGeometry(); particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
     this.particles = new THREE.Points(particleGeometry, new THREE.PointsMaterial({ color: '#d8bf83', size: .035, transparent: true, opacity: .5, blending: THREE.AdditiveBlending, depthWrite: false })); this.scene.add(this.particles);
-    this.observer = new ResizeObserver(this.resize); this.observer.observe(host); this.resize();
+    this.observer = new ResizeObserver(this.resize); this.observer.observe(this.host); this.resize();
     this.renderer.domElement.addEventListener('pointerdown', this.onDown);
     this.renderer.domElement.addEventListener('pointermove', this.onMove);
     this.renderer.domElement.addEventListener('pointerup', this.onUp);
     this.renderer.domElement.addEventListener('pointerleave', this.onLeave);
     this.renderer.domElement.addEventListener('webglcontextlost', this.onContextLost);
     document.addEventListener('visibilitychange', this.onVisibility);
-    this.setChamber('ember'); this.renderer.setAnimationLoop(this.frame);
+    this.setChamber('ember');
+    this.renderer.render(this.scene, this.camera);
+    if (this.renderer.getContext().isContextLost()) throw new Error('WebGL context was lost while opening the scene.');
+    this.renderer.setAnimationLoop(this.frame);
   }
 
   private makeChamber() {
@@ -164,7 +177,7 @@ export class TreasuryWorld {
 
   private makeCoins() {
     const rng = random(771);
-    const count = window.innerWidth < 700 ? 1400 : 2500;
+    const count = this.reducedGraphics || window.innerWidth < 700 ? 1400 : 2500;
     const coins = new THREE.InstancedMesh(new THREE.CylinderGeometry(.115, .115, .035, 10), gold, count);
     coins.castShadow = true; coins.receiveShadow = true;
     const dummy = new THREE.Object3D();
@@ -265,7 +278,10 @@ export class TreasuryWorld {
   wake() { this.dragon.wake(this.time); }
   private cancelCamera = () => { this.targetCamera = null; this.targetLook = null; };
   private onVisibility = () => { this.visible = !document.hidden; this.lastFrame = performance.now(); };
-  private onContextLost = (event: Event) => { event.preventDefault(); this.host.dispatchEvent(new CustomEvent('treasury-render-error')); };
+  private onContextLost = (event: Event) => {
+    event.preventDefault();
+    this.host.dispatchEvent(new CustomEvent('treasury-render-error', { detail: sceneFailure('context-lost', 'WebGL context lost. The browser interrupted the graphics connection.') }));
+  };
   private hit(event: PointerEvent) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
@@ -318,14 +334,23 @@ export class TreasuryWorld {
       this.camera.position.lerp(this.targetCamera, speed); this.controls.target.lerp(this.targetLook, speed);
       if (this.camera.position.distanceTo(this.targetCamera) < .02) this.cancelCamera();
     }
-    this.controls.update(); this.renderer.render(this.scene, this.camera);
+    this.controls.update();
+    try { this.renderer.render(this.scene, this.camera); }
+    catch (error) { this.host.dispatchEvent(new CustomEvent('treasury-render-error', { detail: sceneFailure('render', error) })); }
   };
   dispose() {
-    this.disposed = true; this.renderer.setAnimationLoop(null); this.observer.disconnect(); this.controls.dispose();
-    this.renderer.domElement.removeEventListener('pointerdown', this.onDown); this.renderer.domElement.removeEventListener('pointermove', this.onMove); this.renderer.domElement.removeEventListener('pointerup', this.onUp); this.renderer.domElement.removeEventListener('pointerleave', this.onLeave); this.renderer.domElement.removeEventListener('webglcontextlost', this.onContextLost); document.removeEventListener('visibilitychange', this.onVisibility);
+    if (this.disposed) return;
+    this.disposed = true; this.renderer?.setAnimationLoop(null); this.observer?.disconnect(); this.controls?.dispose();
+    const canvas = this.renderer?.domElement;
+    canvas?.removeEventListener('pointerdown', this.onDown); canvas?.removeEventListener('pointermove', this.onMove); canvas?.removeEventListener('pointerup', this.onUp); canvas?.removeEventListener('pointerleave', this.onLeave); canvas?.removeEventListener('webglcontextlost', this.onContextLost); document.removeEventListener('visibilitychange', this.onVisibility);
     const geometries = new Set<THREE.BufferGeometry>(); const materials = new Set<THREE.Material>();
-    this.scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Points) { geometries.add(object.geometry); (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => materials.add(material)); } });
+    for (const root of [this.scene, this.dragon.root]) root.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Points) { geometries.add(object.geometry); (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => materials.add(material)); } });
     geometries.forEach(geometry => geometry.dispose()); materials.forEach(material => material.dispose());
-    this.environment.dispose(); this.renderer.dispose(); this.renderer.domElement.remove();
+    this.key.shadow.dispose(); this.environment?.dispose();
+    if (this.renderer) {
+      this.renderer.dispose();
+      if (!this.renderer.getContext().isContextLost()) this.renderer.forceContextLoss();
+      canvas?.remove();
+    }
   }
 }

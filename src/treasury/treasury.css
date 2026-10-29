@@ -13,3 +13,10 @@
 @media(max-width:760px){.chamber-picker{top:auto;bottom:112px;left:20px;right:auto;text-align:left}.chamber-picker>div{justify-content:flex-start}.chamber-picker label{font-size:6px}.chamber-picker p{display:none}.keeper-note{bottom:110px;max-width:160px}}
 /* Fixed detail/help panels must sit above the collection dock on small screens. */
 .has-selection .experience,.treasury-app:has(.help-panel) .experience{z-index:6}
+/* Failure details stay readable and the retry remains available at every size. */
+.view-collection:has(.fallback-notice) .experience{height:auto;flex:0 0 auto}
+.fallback-notice{font-size:12px;line-height:1.7;max-width:740px}
+.fallback-notice .text-link{margin:10px 0;font-size:12px}
+.fallback-notice details{color:var(--muted);font-size:11px}
+.fallback-notice summary{cursor:pointer;width:fit-content}
+.fallback-notice details p{padding:8px 0;overflow-wrap:anywhere;user-select:text}

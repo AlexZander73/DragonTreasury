@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { canEnter, categoryLabel, filterProjects, loadProjects, siteUrl, statusLabel, type Project } from './catalog';
 import type { TreasuryWorld, Chamber, Arrangement } from './world';
 import { TreasurySound } from './sound';
+import { sceneFailureMessage, startScene, type SceneFailure } from './scene-recovery';
 
 type IconName = 'arrow' | 'back' | 'diamond' | 'grid' | 'world' | 'search' | 'close' | 'reset' | 'pause' | 'play' | 'sound' | 'mute' | 'help' | 'chevron' | 'spark' | 'dragon' | 'focus';
 function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
@@ -41,8 +42,10 @@ const filters = [{ value: 'all', label: 'All treasures' }, { value: 'featured', 
 export function Treasury() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadError, setLoadError] = useState('');
-  const [sceneError, setSceneError] = useState(false);
+  const [sceneError, setSceneError] = useState<SceneFailure | null>(null);
+  const [sceneAttempt, setSceneAttempt] = useState(0);
   const [ready, setReady] = useState(false);
+  const [worldVersion, setWorldVersion] = useState(0);
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -84,28 +87,28 @@ export function Treasury() {
   }, []);
   useEffect(() => {
     if (!projects.length || !host.current) return;
-    let cancelled = false;
     const element = host.current;
-    const failure = () => { setSceneError(true); setView('collection'); setReady(false); world.current?.dispose(); world.current = undefined; };
+    const session = startScene({
+      load: () => import('./world'),
+      create: ({ TreasuryWorld }, reducedGraphics) => new TreasuryWorld(element, projects, { select: id => callbacks.current.select(id), wake: () => callbacks.current.wake(), hover: (id, x, y) => setHover(id ? { id, x, y } : null) }, reducedGraphics),
+      ready: scene => { world.current = scene; setSceneError(null); setReady(true); setWorldVersion(version => version + 1); },
+      recovering: () => { world.current = undefined; setReady(false); setHover(null); },
+      failed: failure => { world.current = undefined; setSceneError(failure); setView('collection'); setReady(false); setHover(null); },
+      reducedGraphics: sceneAttempt > 0,
+    });
+    const failure = (event: Event) => session.interrupted((event as CustomEvent<SceneFailure>).detail);
     element.addEventListener('treasury-render-error', failure);
-    import('./world').then(({ TreasuryWorld }) => {
-      if (cancelled) return;
-      try {
-        world.current = new TreasuryWorld(element, projects, { select: id => callbacks.current.select(id), wake: () => callbacks.current.wake(), hover: (id, x, y) => setHover(id ? { id, x, y } : null) });
-        setReady(true);
-      } catch (error) { console.error('Treasury renderer could not start', error); failure(); }
-    }).catch(failure);
-    return () => { cancelled = true; element.removeEventListener('treasury-render-error', failure); world.current?.dispose(); world.current = undefined; };
-  }, [projects]);
-  useEffect(() => { if (ready) world.current?.setChamber(chamber); }, [chamber, ready]);
-  useEffect(() => { if (ready) world.current?.setFilter(visible.map(project => project.id)); }, [visible, ready]);
-  useEffect(() => { if (ready) world.current?.setArrangement(arrangement); }, [arrangement, ready]);
-  useEffect(() => { if (ready) world.current?.select(selectedId); }, [selectedId, ready]);
+    return () => { element.removeEventListener('treasury-render-error', failure); session.dispose(); world.current = undefined; };
+  }, [projects, sceneAttempt]);
+  useEffect(() => { if (ready) world.current?.setChamber(chamber); }, [chamber, ready, worldVersion]);
+  useEffect(() => { if (ready) world.current?.setFilter(visible.map(project => project.id)); }, [visible, ready, worldVersion]);
+  useEffect(() => { if (ready) world.current?.setArrangement(arrangement); }, [arrangement, ready, worldVersion]);
+  useEffect(() => { if (ready) world.current?.select(selectedId); }, [selectedId, ready, worldVersion]);
   useEffect(() => {
     world.current?.setMotion(reduced, paused || view === 'collection');
     world.current?.setActive(view === 'world');
     try { localStorage.setItem('treasury-paused', String(paused)); localStorage.setItem('treasury-reduced', String(reduced)); } catch { /* Preferences are optional. */ }
-  }, [reduced, paused, view, ready]);
+  }, [reduced, paused, view, ready, worldVersion]);
   useEffect(() => { if (view === 'collection') { sound.current.stop(); setSoundOn(false); } }, [view]);
   useEffect(() => { if (selectedId) closeButton.current?.focus({ preventScroll: true }); }, [selectedId]);
   useEffect(() => { if (selectedId && !visible.some(project => project.id === selectedId)) setSelectedId(null); }, [visible, selectedId]);
@@ -125,6 +128,10 @@ export function Treasury() {
     else { try { await sound.current.start(); setSoundOn(true); } catch { announce('Sound could not start in this browser.'); } }
   };
   const browse = () => { setView('collection'); setSelectedId(null); collection.current?.focus({ preventScroll: true }); };
+  const retryScene = () => {
+    if (sceneError?.stage === 'download') { window.location.reload(); return; }
+    setSceneError(null); setReady(false); setView('world'); setSceneAttempt(attempt => attempt + 1);
+  };
 
   return <div className={`treasury-app chamber-${chamber} view-${view}${selected ? ' has-selection' : ''}`}>
     <a className="skip-link" href="#collection">Skip to the treasure collection</a>
@@ -142,7 +149,7 @@ export function Treasury() {
 
       <div className="world-topline">
         <div className="location"><span className="tiny-diamond" /> <span>THE INNER SANCTUM</span><span className="location-divider">/</span><span>01</span></div>
-        <div className="view-switch" aria-label="Display mode"><button className={view === 'world' ? 'active' : ''} aria-pressed={view === 'world'} onClick={() => { setView('world'); setHover(null); }} disabled={sceneError}><Icon name="world" size={15} />3D world</button><button className={view === 'collection' ? 'active' : ''} aria-pressed={view === 'collection'} onClick={browse}><Icon name="grid" size={14} />Collection</button></div>
+        <div className="view-switch" aria-label="Display mode"><button className={view === 'world' ? 'active' : ''} aria-pressed={view === 'world'} onClick={() => { if (sceneError) retryScene(); else setView('world'); setHover(null); }}><Icon name="world" size={15} />3D world</button><button className={view === 'collection' ? 'active' : ''} aria-pressed={view === 'collection'} onClick={browse}><Icon name="grid" size={14} />Collection</button></div>
       </div>
 
       {view === 'world' && !selected && <section className="intro" aria-labelledby="treasury-title">
@@ -174,7 +181,7 @@ export function Treasury() {
         <div className="project-actions">{canEnter(selected) ? <a className="primary-button" href={selected.url}>{selected.status === 'shipped' ? 'Explore project' : 'Explore preview'}<Icon name="arrow" size={17} /></a> : <p className="development-note"><span className="tiny-diamond" /> Still taking shape. Come back to see it grow.</p>}{view === 'world' && <button className="focus-button" onClick={() => world.current?.focus(selected.id)} title="Look closer at this treasure" aria-label="Look closer at this treasure"><Icon name="focus" size={19} /></button>}</div>
       </aside>}
 
-      {view === 'collection' && <div className="collection-intro"><p className="eyebrow">THE COMPLETE HOARD</p><h1>Small ideas. <em>Real treasures.</em></h1><p>Products, experiments, and useful things. Pick one to discover its story.</p>{sceneError && <p className="fallback-notice" role="status">The 3D world isn’t available in this browser. Every project is still here to explore.</p>}</div>}
+      {view === 'collection' && <div className="collection-intro"><p className="eyebrow">THE COMPLETE HOARD</p><h1>Small ideas. <em>Real treasures.</em></h1><p>Products, experiments, and useful things. Pick one to discover its story.</p>{sceneError && <div className="fallback-notice"><p role="status">{sceneFailureMessage(sceneError)} Every project is still here to explore.</p><button className="text-link" onClick={retryScene}>{sceneError.stage === 'download' ? 'Reload page' : 'Retry 3D world'}<Icon name="reset" size={15} /></button><details><summary>Error details</summary><p>{sceneError.stage}: {sceneError.detail}</p></details></div>}</div>}
 
       {help && <section className="help-panel" aria-label="Help and accessibility"><div><h2>A few ways to explore</h2><button className="icon-button" aria-label="Close help" onClick={() => setHelp(false)}><Icon name="close" /></button></div><p>Drag to orbit the vault. Scroll or pinch to zoom. Select a relic to open its story, or wake the dragon to see him stir.</p><p>The Collection view gives you the same projects with keyboard navigation. Press <kbd>/</kbd> to search and <kbd>Esc</kbd> to close details.</p><label><input type="checkbox" checked={reduced} onChange={event => setReduced(event.target.checked)} /> Reduce motion</label><button className="text-link" onClick={() => { browse(); setHelp(false); }}>Open collection <Icon name="arrow" /></button></section>}
     </main>

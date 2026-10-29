@@ -75,7 +75,9 @@ The treasury source workflow builds and tests source changes and checks that the
 
 ## Rendering and graceful fallback
 
-Three.js loads after the catalog UI. No 3D model downloads or paid services are required: the rig, world, relics and animations are generated locally. Coin piles use instancing; mobile screens use fewer coins and a capped pixel ratio. Rendering pauses in hidden tabs and Collection view. If WebGL initialization or context fails, Collection view remains usable. Catalog errors are explicit and never silently replaced with stale data.
+Three.js loads after the catalog UI. No 3D model downloads or paid services are required: the rig, world, relics and animations are generated locally. Coin piles use instancing. The drawing buffer is capped at two million pixels, without multisample antialiasing or a forced GPU preference; reflections use a 128px environment map and shadows use a 1024px map. Rendering pauses in hidden tabs and Collection view.
+
+If graphics initialization fails or the WebGL context is lost, the scene is rebuilt once with a 900,000-pixel cap, a 64px reflection map, fewer decorative coins and no shadow map. Project filters, selection, chamber and motion preferences are reapplied. Repeated failure leaves Collection view usable with a manual retry and the actual error details. Failed module downloads instead offer a page reload. Recovery releases the previous canvas and GPU resources; it never runs an unlimited retry loop. Catalog errors are explicit and never silently replaced with stale data.
 
 The serif and UI fonts use Google Fonts with local system fallbacks. All project imagery comes from MainWebsite's shared catalog. Scene geometry and UI code are original procedural assets.
 
